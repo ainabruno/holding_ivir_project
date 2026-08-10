@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, desc, gte, lte, and, count, avg } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, LegalDocument, InsertLegalDocument, LegalEntity, InsertLegalEntity, legalDocuments, legalEntities } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,137 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// Module Gamma: Database query helpers for legal documents and entities
+export async function createLegalDocument(doc: InsertLegalDocument) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(legalDocuments).values(doc);
+  return result;
+}
+
+export async function getLegalDocumentByIdSource(idSource: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .select()
+    .from(legalDocuments)
+    .where(eq(legalDocuments.idSource, idSource))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getAllLegalDocuments(limit: number = 50, offset: number = 0) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db
+    .select()
+    .from(legalDocuments)
+    .orderBy(desc(legalDocuments.dateCollecte))
+    .limit(limit)
+    .offset(offset);
+}
+
+export async function getLegalDocumentsByDateRange(startDate: Date, endDate: Date) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db
+    .select()
+    .from(legalDocuments)
+    .where(
+      and(
+        gte(legalDocuments.dateCollecte, startDate),
+        lte(legalDocuments.dateCollecte, endDate)
+      )
+    )
+    .orderBy(desc(legalDocuments.dateCollecte));
+}
+
+export async function getLegalDocumentsBySource(source: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db
+    .select()
+    .from(legalDocuments)
+    .where(eq(legalDocuments.source, source))
+    .orderBy(desc(legalDocuments.dateCollecte));
+}
+
+export async function createLegalEntity(entity: InsertLegalEntity) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(legalEntities).values(entity);
+  return result;
+}
+
+export async function getLegalEntityBySourceId(sourceId: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .select()
+    .from(legalEntities)
+    .where(eq(legalEntities.sourceId, sourceId))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getLegalEntitiesByVerdict(verdict: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db
+    .select()
+    .from(legalEntities)
+    .where(eq(legalEntities.sensVerdict, verdict))
+    .orderBy(desc(legalEntities.createdAt));
+}
+
+export async function getLegalEntitiesByJuridiction(juridiction: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db
+    .select()
+    .from(legalEntities)
+    .where(eq(legalEntities.juridiction, juridiction))
+    .orderBy(desc(legalEntities.createdAt));
+}
+
+export async function getStatistics() {
+  const db = await getDb();
+  if (!db) return null;
+  
+  // Get total documents
+  const totalDocs = await db
+    .select({ count: count() })
+    .from(legalDocuments);
+  
+  // Get verdict distribution
+  const verdictDist = await db
+    .select({
+      verdict: legalEntities.sensVerdict,
+      count: count(),
+    })
+    .from(legalEntities)
+    .groupBy(legalEntities.sensVerdict);
+  
+  // Get top jurisdictions
+  const topJurisdictions = await db
+    .select({
+      juridiction: legalEntities.juridiction,
+      count: count(),
+    })
+    .from(legalEntities)
+    .groupBy(legalEntities.juridiction)
+    .orderBy(desc(count()))
+    .limit(10);
+  
+  // Get average confidence
+  const avgConfidence = await db
+    .select({ avg: avg(legalEntities.niveauConfiance) })
+    .from(legalEntities);
+  
+  return {
+    totalDocuments: totalDocs[0]?.count || 0,
+    verdictDistribution: verdictDist,
+    topJurisdictions,
+    averageConfidence: avgConfidence[0]?.avg || 0,
+  };
+}
