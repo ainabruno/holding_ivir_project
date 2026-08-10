@@ -1,0 +1,27 @@
+# Python environment for Module Alpha (Scraping) and Module Beta (Extraction)
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY modules/requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy modules
+COPY modules /app/modules
+
+# Create output directory
+RUN mkdir -p /app/output
+
+# Set environment
+ENV PYTHONUNBUFFERED=1
+
+# Default command
+CMD ["python", "modules/alpha_scraping.py"]

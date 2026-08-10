@@ -61,22 +61,22 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 - [x] Implement responsive design
 
 ## Authentication & Access Control
-- [ ] Verify Manus OAuth integration is working
-- [ ] Create admin-only routes for scraping/extraction triggers
-- [ ] Implement role-based access control (admin vs public)
+- [x] Verify Manus OAuth integration is working
+- [x] Create admin-only routes for scraping/extraction triggers
+- [x] Implement role-based access control (admin vs public)
 - [ ] Add login/logout UI
-- [ ] Protect admin dashboard behind authentication
-- [ ] Allow public read-only access to documents
+- [x] Protect admin dashboard behind authentication
+- [x] Allow public read-only access to documents
 
 ## Deployment & Configuration
-- [ ] Create .env.example file with all required variables
-- [ ] Configure environment variables for Mistral API key
-- [ ] Configure database connection string
-- [ ] Create Docker configuration
-- [ ] Create docker-compose.yml for local development
-- [ ] Add production build scripts
-- [ ] Create comprehensive README with setup instructions
-- [ ] Add deployment documentation
+- [x] Create .env.example file with all required variables
+- [x] Configure environment variables for Mistral API key
+- [x] Configure database connection string
+- [x] Create Docker configuration
+- [x] Create docker-compose.yml for local development
+- [x] Add production build scripts
+- [x] Create comprehensive README with setup instructions
+- [x] Add deployment documentation
 
 ## Testing & Quality
 - [ ] Write unit tests for scraping module
