@@ -12,3 +12,8 @@ export function pipelineStatusMessage(status: "running" | "success" | "error", d
   if (status === "success") return "Traitement terminé avec succès.";
   return `Erreur : ${detail || "Erreur inconnue"}`;
 }
+
+export function shouldOfferExtractionRetry(status?: string | null, success?: boolean | null): boolean {
+  if (success === false) return true;
+  return Boolean(status && /(extraction|mistral|ia|avertissement)/i.test(status));
+}

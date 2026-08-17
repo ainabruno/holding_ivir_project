@@ -207,3 +207,8 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 - [x] Analyser la source de l’avertissement « Le traitement s’est terminé avec un avertissement » dans FastAPI et le client React
 - [x] Rendre les messages d’erreur du pipeline explicites en propageant `result.message`
 - [x] Valider le déclenchement réel avec un test d’intégration et un rapport clair
+
+## Relance manuelle sur erreur
+- [x] Ajouter un bouton « Relancer l’extraction » conditionnel dans AdminPanel lorsqu’un avertissement ou une erreur survient
+- [x] Relier ce bouton à l’endpoint d’extraction existant de FastAPI
+- [x] Valider le test unitaire et le build frontend

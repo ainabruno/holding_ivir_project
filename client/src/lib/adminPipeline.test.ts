@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isValidSourceUrl, pipelineStatusMessage } from "./adminPipeline";
+import { isValidSourceUrl, pipelineStatusMessage, shouldOfferExtractionRetry } from "./adminPipeline";
 
 describe("AdminPanel pipeline contract", () => {
   it("accepts only absolute HTTP or HTTPS source URLs", () => {
@@ -20,3 +20,10 @@ describe("AdminPanel pipeline contract", () => {
     const warningMsg = "Avertissement : robots.txt interdit l'accès à ce chemin.";
     expect(pipelineStatusMessage("error", warningMsg)).toBe(`Erreur : ${warningMsg}`);
   });
+
+  it("offers extraction retry only for failed or extraction-related statuses", () => {
+    expect(shouldOfferExtractionRetry("Erreur : extraction Mistral impossible", true)).toBe(true);
+    expect(shouldOfferExtractionRetry("Erreur : URL bloquée par robots.txt", false)).toBe(true);
+    expect(shouldOfferExtractionRetry("Traitement terminé avec succès.", true)).toBe(false);
+  });
+
