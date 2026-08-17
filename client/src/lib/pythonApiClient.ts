@@ -24,8 +24,8 @@ export const pythonApi = {
     return res.data;
   },
 
-  async triggerScraping(source: string) {
-    const res = await api.post("/api/admin/trigger-scraping", { source });
+  async triggerScraping(source: string, url: string) {
+    const res = await api.post("/api/admin/trigger-scraping", { source, url });
     return res.data;
   },
 

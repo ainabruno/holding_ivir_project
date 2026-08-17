@@ -167,3 +167,11 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 - [x] Implémenter les exports CSV/PDF natifs en Python
 - [x] Mettre à jour Dockerfile, docker-compose.yml et les guides pour une stack 100% Python
 - [x] Vérifier les tests Python, le build frontend et livrer le checkpoint Python
+
+- [x] Ajouter un champ URL source dans AdminPanel
+- [x] Ajouter le choix de source et la validation URL côté FastAPI
+- [x] Déclencher le scraping réel sur l’URL fournie après clic
+- [x] Exécuter l’extraction IA sur les documents collectés après le scraping
+- [x] Afficher le statut, le nombre ajouté et les erreurs dans AdminPanel
+- [x] Ajouter les tests API et interface du lancement par URL
+- [ ] Mettre à jour la documentation et créer un checkpoint de cette fonctionnalité

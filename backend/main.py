@@ -4,7 +4,7 @@ from datetime import datetime
 from fastapi import FastAPI, Depends, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field
+from pydantic import AnyHttpUrl, BaseModel, Field
 
 from backend.database import init_db, get_db, LegalDocumentModel, LegalEntityModel
 from backend.scraper import LegalScraper
@@ -42,6 +42,7 @@ if dist_dir.exists():
 # Pydantic Schemas for API
 class TriggerScrapingRequest(BaseModel):
     source: str = Field("wikipedia", description="Source à scraper")
+    url: AnyHttpUrl = Field(..., description="URL HTTP/HTTPS à scraper")
 
 class TriggerExtractionRequest(BaseModel):
     document_ids: list[int] | None = Field(None, description="IDs optionnels à enrichir")
@@ -80,10 +81,13 @@ def build_export_row(doc: LegalDocumentModel, entity: LegalEntityModel | None) -
 
 @app.post("/api/admin/trigger-scraping")
 def trigger_scraping(payload: TriggerScrapingRequest, db: Session = Depends(get_db)):
-    scraper = LegalScraper()
+    scraper = LegalScraper(str(payload.url))
     extractor = LegalAIExtractor()
     
-    raw_docs = scraper.scrape_wikipedia_legal()
+    try:
+        raw_docs = scraper.scrape_url(str(payload.url))
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
     added_count = 0
     
     for item in raw_docs:
@@ -124,7 +128,7 @@ def trigger_scraping(payload: TriggerScrapingRequest, db: Session = Depends(get_
 
     return {
         "success": True,
-        "message": f"Scraping et extraction terminés pour {payload.source}",
+        "message": f"Scraping et extraction terminés pour {payload.source} depuis {payload.url}",
         "documents_added": added_count,
         "timestamp": datetime.utcnow().isoformat(),
     }

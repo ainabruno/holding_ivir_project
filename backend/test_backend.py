@@ -29,6 +29,35 @@ def test_api_documents_list():
     assert "documents" in data
     assert "count" in data
 
+def test_trigger_scraping_with_url(monkeypatch):
+    fake_document = {
+        "source": "custom",
+        "id_source": "custom-test-1",
+        "url_source": "https://example.test/legal",
+        "type_document": "Document juridique de test",
+        "juridiction": "Paris",
+        "date_decision": "2026-08-17",
+        "texte_brut": "Un texte juridique suffisamment long pour être envoyé à l’extraction.",
+        "hash_dedup": "a" * 32,
+    }
+    monkeypatch.setattr("backend.main.LegalScraper.scrape_url", lambda self, url: [fake_document])
+    response = client.post("/api/admin/trigger-scraping", json={
+        "source": "custom",
+        "url": "https://example.test/legal",
+    })
+    assert response.status_code == 200
+    data = response.json()
+    assert data["success"] is True
+    assert data["documents_added"] == 1
+    assert "https://example.test/legal" in data["message"]
+
+def test_trigger_scraping_rejects_invalid_url():
+    response = client.post("/api/admin/trigger-scraping", json={
+        "source": "custom",
+        "url": "not-a-url",
+    })
+    assert response.status_code == 422
+
 def test_csv_export_format():
     rows = [{
         "document_id": 1,
