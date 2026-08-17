@@ -186,3 +186,10 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 - [x] Analyser le cahier des charges fourni (`pasted_content_2.txt`) et établir la matrice de conformité
 - [x] Vérifier la correspondance exacte entre les modules Alpha, Bêta, Gamma, Delta, Interface et les spécifications
 - [x] Rédiger le rapport d’audit de conformité (`AUDIT_CAHIER_DES_CHARGES.md`)
+
+## Transition vers une application réelle et opérationnelle
+- [x] Auditer l’écart entre la démo actuelle et le besoin réel (API Légifrance OAuth2 + interface métier réelle)
+- [x] Implémenter le module d’authentification OAuth2 PISTE / Légifrance avec gestion et renouvellement des tokens Bearer
+- [ ] Connecter le scraper aux endpoints de recherche de l’API Légifrance et valider l’accès métier PISTE (code prêt, droits API sandbox encore requis)
+- [x] Enrichir l’interface React avec navigation métier, recherche Légifrance, connexion admin et résultats persistants
+- [x] Ajouter les tests d’intégration du contrat JURI, de l’authentification et documenter la configuration des clés d’accès Légifrance et Mistral

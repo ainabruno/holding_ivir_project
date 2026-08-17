@@ -3,6 +3,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import Dashboard from "@/pages/Dashboard";
 import AdminPanel from "@/pages/AdminPanel";
+import LegifranceSearch from "@/pages/LegifranceSearch";
+import LegalWorkspaceLayout from "./components/LegalWorkspaceLayout";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -15,6 +17,7 @@ function Router() {
       <Route path={APP_ROUTES.home} component={Dashboard} />
       <Route path={APP_ROUTES.dashboard} component={Dashboard} />
       <Route path={APP_ROUTES.admin} component={AdminPanel} />
+      <Route path="/legifrance" component={LegifranceSearch} />
       <Route path={APP_ROUTES.notFound} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
@@ -36,7 +39,7 @@ function App() {
       >
         <TooltipProvider>
           <Toaster />
-          <Router />
+          <LegalWorkspaceLayout><Router /></LegalWorkspaceLayout>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

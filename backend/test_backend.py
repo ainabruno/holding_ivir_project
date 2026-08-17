@@ -144,3 +144,69 @@ def test_extractor_fallback():
     assert res["juridiction"] is not None
     assert res["verdict"] in ["favorable", "rejected", "partial"]
     assert res["niveau_confiance"] > 0
+
+
+def test_legifrance_search_payload_and_document_mapping(monkeypatch):
+    captured = {}
+
+    def fake_search(self, **kwargs):
+        captured.update(kwargs)
+        return [{
+            "id": "JURI-123",
+            "titre": "Arrêt sur malfaçon de construction",
+            "texte": "Une décision judiciaire détaillée sur une malfaçon de construction et la garantie décennale.",
+            "dateDecision": "2026-08-17",
+            "juridiction": "Cour d'appel de Paris",
+            "url": "https://www.legifrance.gouv.fr/juri/JURI-123",
+        }]
+
+    monkeypatch.setattr("backend.main.LegifranceClient.search_jurisprudence", fake_search)
+    monkeypatch.setattr("backend.main.LegalAIExtractor.extract_entities", lambda self, text, source_id: {
+        "juridiction": "Cour d'appel de Paris",
+        "verdict": "partial",
+        "montant_alloue": 45000.0,
+        "parties": ["Entreprise A", "Client B"],
+        "references_legales": ["Article 1792 du Code civil"],
+        "niveau_confiance": 91.0,
+        "resume_automatique": "Décision de test issue de Légifrance.",
+    })
+
+    response = client.post("/api/admin/legifrance/search", json={
+        "keywords": "malfaçon construction",
+        "start_date": "2026-01-01",
+        "end_date": "2026-08-17",
+        "page": 1,
+        "page_size": 20,
+    })
+    assert response.status_code == 200
+    assert response.json()["documents_added"] == 1
+    assert captured["keywords"] == "malfaçon construction"
+    assert captured["start_date"].isoformat() == "2026-01-01"
+
+    dashboard = client.get("/api/legal/documents?source=legifrance")
+    assert dashboard.status_code == 200
+    data = dashboard.json()
+    assert data["count"] == 1
+    assert data["documents"][0]["source"] == "legifrance"
+    assert data["documents"][0]["extractedEntity"]["verdict"] == "partial"
+
+
+def test_legifrance_search_rejects_invalid_date(monkeypatch):
+    monkeypatch.setattr("backend.main.LegifranceClient.search_jurisprudence", lambda self, **kwargs: [])
+    response = client.post("/api/admin/legifrance/search", json={
+        "keywords": "construction",
+        "start_date": "17-08-2026",
+    })
+    assert response.status_code == 422
+    assert "Date invalide" in response.json()["detail"]
+
+
+def test_admin_authentication_required_outside_testing(monkeypatch):
+    monkeypatch.setenv("TESTING", "false")
+    monkeypatch.setenv("ADMIN_API_TOKEN", "test-admin-secret")
+    denied = client.get("/api/auth/me")
+    assert denied.status_code == 401
+
+    allowed = client.get("/api/auth/me", headers={"Authorization": "Bearer test-admin-secret"})
+    assert allowed.status_code == 200
+    assert allowed.json()["role"] == "admin"

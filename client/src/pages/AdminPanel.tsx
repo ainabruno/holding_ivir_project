@@ -24,11 +24,32 @@ export default function AdminPanel() {
   const [runResult, setRunResult] = useState<RunResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(frontendOnly);
+  const [adminToken, setAdminToken] = useState("");
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     if (frontendOnly) return;
     pythonApi.me().then((user) => setIsAdmin(user?.role === "admin")).catch(() => setIsAdmin(false));
   }, []);
+
+  const handleAdminLogin = async () => {
+    if (!adminToken.trim()) {
+      setAuthError("Saisissez le jeton administrateur fourni par l’administrateur du déploiement.");
+      return;
+    }
+    setIsLoading(true);
+    setAuthError(null);
+    try {
+      await pythonApi.authenticateAdmin(adminToken.trim());
+      setIsAdmin(true);
+      setAdminToken("");
+    } catch (error: any) {
+      pythonApi.clearAdminToken();
+      setAuthError(error?.response?.data?.detail || "Jeton administrateur refusé par l’API FastAPI.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleTriggerPipeline = async () => {
     const normalizedUrl = sourceUrl.trim();
@@ -72,9 +93,11 @@ export default function AdminPanel() {
 
   if (!isAdmin) {
     return (
-      <main className="min-h-screen bg-slate-50 p-6">
-        <div className="mx-auto max-w-3xl">
-          <Alert className="border-red-200 bg-red-50"><AlertCircle className="h-4 w-4 text-red-600" /><AlertDescription className="text-red-800">Accès refusé. Ce panneau est réservé aux administrateurs authentifiés par l’API Python.</AlertDescription></Alert>
+      <main className="min-h-screen bg-slate-50 p-4 text-slate-950 sm:p-6 lg:p-8">
+        <div className="mx-auto max-w-xl space-y-6">
+          <header><p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-700">Accès sécurisé</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">Connexion administrateur</h1><p className="mt-2 text-sm leading-6 text-slate-600">Les actions de collecte, de recherche Légifrance et d’extraction modifient le corpus. Elles nécessitent le jeton Bearer configuré côté serveur.</p></header>
+          {authError && <Alert className="border-red-200 bg-red-50"><AlertCircle className="h-4 w-4 text-red-600" /><AlertDescription className="text-red-800">{authError}</AlertDescription></Alert>}
+          <Card className="border-0 bg-white shadow-sm ring-1 ring-slate-200"><CardHeader><CardTitle>Se connecter à FastAPI</CardTitle><CardDescription>Le jeton est conservé uniquement en mémoire de session du navigateur et n’est pas affiché.</CardDescription></CardHeader><CardContent className="space-y-4"><label className="block space-y-2"><span className="text-sm font-medium">Jeton administrateur</span><Input type="password" value={adminToken} onChange={(event) => setAdminToken(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") void handleAdminLogin(); }} placeholder="Bearer token" autoComplete="current-password" /></label><Button type="button" onClick={handleAdminLogin} disabled={isLoading} className="w-full bg-slate-950 text-white hover:bg-slate-800">{isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Vérification…</> : "Se connecter"}</Button></CardContent></Card>
         </div>
       </main>
     );

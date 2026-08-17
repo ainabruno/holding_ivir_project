@@ -1,11 +1,35 @@
 import axios from "axios";
 
+const ADMIN_TOKEN_KEY = "holding-ivir-admin-token";
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_PYTHON_API_URL || "",
   withCredentials: true,
 });
 
+api.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const token = window.sessionStorage.getItem(ADMIN_TOKEN_KEY);
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 export const pythonApi = {
+  async authenticateAdmin(token: string) {
+    if (typeof window !== "undefined") window.sessionStorage.setItem(ADMIN_TOKEN_KEY, token);
+    try {
+      return await this.me();
+    } catch (error) {
+      if (typeof window !== "undefined") window.sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+      throw error;
+    }
+  },
+
+  clearAdminToken() {
+    if (typeof window !== "undefined") window.sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+  },
+
   async listDocuments(params: {
     limit?: number;
     offset?: number;
@@ -32,6 +56,35 @@ export const pythonApi = {
   async triggerExtraction(documentIds?: number[]) {
     const res = await api.post("/api/admin/trigger-extraction", { document_ids: documentIds });
     return res.data;
+  },
+
+  async getLegifranceStatus() {
+    const res = await api.get("/api/admin/legifrance/status");
+    return res.data as { configured: boolean; apiBaseUrl: string; environment: string };
+  },
+
+  async pingLegifrance() {
+    const res = await api.post("/api/admin/legifrance/ping");
+    return res.data;
+  },
+
+  async searchLegifrance(payload: {
+    keywords: string;
+    start_date?: string;
+    end_date?: string;
+    page?: number;
+    page_size?: number;
+  }) {
+    const res = await api.post("/api/admin/legifrance/search", payload);
+    return res.data as {
+      success: boolean;
+      source: string;
+      keywords: string;
+      results_received: number;
+      documents_added: number;
+      documents_enriched: number;
+      message: string;
+    };
   },
 
   async me() {

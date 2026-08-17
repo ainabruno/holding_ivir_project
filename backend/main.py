@@ -1,7 +1,10 @@
 import os
 import json
+import hashlib
+import hmac
 from datetime import datetime
 from fastapi import FastAPI, Depends, HTTPException, Query, Response
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import AnyHttpUrl, BaseModel, Field
@@ -10,6 +13,8 @@ from backend.database import init_db, get_db, LegalDocumentModel, LegalEntityMod
 from backend.scraper import LegalScraper
 from backend.extractor import LegalAIExtractor
 from backend.exports import generate_csv_export, generate_pdf_export
+from backend.legifrance_client import LegifranceApiError, LegifranceClient
+from backend.legifrance_auth import LegifranceAuthError
 
 import pathlib
 from fastapi.staticfiles import StaticFiles
@@ -20,6 +25,21 @@ app = FastAPI(
     version="2.0.0",
     description="Backend 100% Python FastAPI pour la plateforme Holding IVIR"
 )
+
+security = HTTPBearer(auto_error=False)
+
+
+def require_admin(credentials: HTTPAuthorizationCredentials | None = Depends(security)) -> str:
+    """Require the configured admin Bearer token in non-test environments."""
+    expected = os.getenv("ADMIN_API_TOKEN", "").strip()
+    if os.getenv("TESTING", "false").lower() == "true":
+        return "test-admin"
+    if not expected:
+        raise HTTPException(status_code=503, detail="ADMIN_API_TOKEN n’est pas configuré côté serveur.")
+    if not credentials or credentials.scheme.lower() != "bearer" or not hmac.compare_digest(credentials.credentials, expected):
+        raise HTTPException(status_code=401, detail="Authentification administrateur requise.", headers={"WWW-Authenticate": "Bearer"})
+    return credentials.credentials
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -46,6 +66,13 @@ class TriggerScrapingRequest(BaseModel):
 
 class TriggerExtractionRequest(BaseModel):
     document_ids: list[int] | None = Field(None, description="IDs optionnels à enrichir")
+
+class LegifranceSearchRequest(BaseModel):
+    keywords: str = Field(..., min_length=2, max_length=200, description="Mots-clés à rechercher dans la jurisprudence judiciaire")
+    start_date: str | None = Field(None, description="Date de début ISO YYYY-MM-DD")
+    end_date: str | None = Field(None, description="Date de fin ISO YYYY-MM-DD")
+    page: int = Field(1, ge=1, le=100)
+    page_size: int = Field(20, ge=1, le=100)
 
 # Helper to format export row dict
 def build_export_row(doc: LegalDocumentModel, entity: LegalEntityModel | None) -> dict:
@@ -80,7 +107,7 @@ def build_export_row(doc: LegalDocumentModel, entity: LegalEntityModel | None) -
     }
 
 @app.post("/api/admin/trigger-scraping")
-def trigger_scraping(payload: TriggerScrapingRequest, db: Session = Depends(get_db)):
+def trigger_scraping(payload: TriggerScrapingRequest, db: Session = Depends(get_db), _: str = Depends(require_admin)):
     scraper = LegalScraper(str(payload.url))
     extractor = LegalAIExtractor()
     
@@ -133,8 +160,105 @@ def trigger_scraping(payload: TriggerScrapingRequest, db: Session = Depends(get_
         "timestamp": datetime.utcnow().isoformat(),
     }
 
+@app.get("/api/admin/legifrance/status")
+def legifrance_status():
+    """Return configuration status without exposing client credentials."""
+    configured = bool(os.getenv("LEGIFRANCE_CLIENT_ID") and os.getenv("LEGIFRANCE_CLIENT_SECRET"))
+    return {
+        "configured": configured,
+        "apiBaseUrl": os.getenv("LEGIFRANCE_API_BASE_URL", "https://sandbox-api.piste.gouv.fr/dila/legifrance/lf-engine-app"),
+        "environment": "sandbox" if "sandbox" in os.getenv("LEGIFRANCE_API_BASE_URL", "sandbox") else "production",
+    }
+
+@app.post("/api/admin/legifrance/ping")
+def legifrance_ping(_: str = Depends(require_admin)):
+    try:
+        result = LegifranceClient(timeout=15).ping()
+        return {"success": True, "result": result}
+    except (LegifranceAuthError, LegifranceApiError) as error:
+        raise HTTPException(status_code=502, detail=str(error)) from error
+
+@app.post("/api/admin/legifrance/search")
+def legifrance_search(payload: LegifranceSearchRequest, db: Session = Depends(get_db), _: str = Depends(require_admin)):
+    """Search real judicial decisions in Légifrance, persist and enrich them."""
+    from datetime import date
+
+    def parse_date(value: str | None) -> date | None:
+        if not value:
+            return None
+        try:
+            return date.fromisoformat(value)
+        except ValueError as error:
+            raise HTTPException(status_code=422, detail=f"Date invalide : {value}") from error
+
+    try:
+        client = LegifranceClient()
+        result_rows = client.search_jurisprudence(
+            keywords=payload.keywords,
+            start_date=parse_date(payload.start_date),
+            end_date=parse_date(payload.end_date),
+            page=payload.page,
+            page_size=payload.page_size,
+        )
+    except (LegifranceAuthError, LegifranceApiError, ValueError) as error:
+        raise HTTPException(status_code=502, detail=str(error)) from error
+
+    extractor = LegalAIExtractor()
+    added = 0
+    enriched = 0
+    for row in result_rows:
+        item = client.document_from_result(row)
+        text_content = item["texte_brut"]
+        if not text_content or len(text_content.strip()) < 20:
+            continue
+        source_id = item.get("id_source") or hashlib.md5(text_content.encode("utf-8")).hexdigest()
+        dedup_hash = hashlib.md5(text_content.encode("utf-8")).hexdigest()
+        existing = db.query(LegalDocumentModel).filter(LegalDocumentModel.hash_dedup == dedup_hash).first()
+        if existing:
+            continue
+
+        doc = LegalDocumentModel(
+            source="legifrance",
+            id_source=source_id,
+            url_source=item["url_source"],
+            type_document=item["type_document"],
+            juridiction=item["juridiction"],
+            date_decision=item["date_decision"],
+            texte_brut=text_content,
+            hash_dedup=dedup_hash,
+        )
+        db.add(doc)
+        db.commit()
+        db.refresh(doc)
+        added += 1
+
+        extracted = extractor.extract_entities(text_content, doc.id_source)
+        db.add(LegalEntityModel(
+            document_id=doc.id,
+            source_id=doc.id_source,
+            juridiction=extracted.get("juridiction") or doc.juridiction,
+            verdict=extracted.get("verdict", "partial"),
+            montant_alloue=extracted.get("montant_alloue"),
+            parties=json.dumps(extracted.get("parties", []), ensure_ascii=False),
+            references_legales=json.dumps(extracted.get("references_legales", []), ensure_ascii=False),
+            niveau_confiance=extracted.get("niveau_confiance", 0.0),
+            resume_automatique=extracted.get("resume_automatique"),
+        ))
+        db.commit()
+        enriched += 1
+
+    return {
+        "success": True,
+        "source": "legifrance",
+        "keywords": payload.keywords,
+        "results_received": len(result_rows),
+        "documents_added": added,
+        "documents_enriched": enriched,
+        "message": "Recherche Légifrance terminée et résultats enregistrés dans le corpus.",
+    }
+
 @app.post("/api/admin/trigger-extraction")
-def trigger_extraction(payload: TriggerExtractionRequest, db: Session = Depends(get_db)):
+def trigger_extraction(payload: TriggerExtractionRequest, db: Session = Depends(get_db), _: str = Depends(require_admin)):
     extractor = LegalAIExtractor()
     query = db.query(LegalDocumentModel)
     if payload.document_ids:
@@ -341,7 +465,7 @@ def export_pdf(
     )
 
 @app.get("/api/auth/me")
-def auth_me():
+def auth_me(_: str = Depends(require_admin)):
     return {
         "id": 1,
         "openId": "python-admin-user",

@@ -25,3 +25,14 @@ VITE_PYTHON_API_URL=http://localhost:8000
 
 NODE_ENV=development
 PORT=3000
+
+# Accès API Légifrance via PISTE (créé dans votre compte PISTE).
+# En sandbox, les URLs officielles sont celles ci-dessous. Pour la production,
+# remplacez-les uniquement par les URLs indiquées par votre application PISTE.
+LEGIFRANCE_CLIENT_ID=replace_with_piste_client_id
+LEGIFRANCE_CLIENT_SECRET=replace_with_piste_client_secret
+PISTE_TOKEN_URL=https://sandbox-oauth.piste.gouv.fr/api/oauth/token
+LEGIFRANCE_API_BASE_URL=https://sandbox-api.piste.gouv.fr/dila/legifrance/lf-engine-app
+
+# Jeton Bearer généré par l’administrateur du déploiement pour les opérations sensibles.
+ADMIN_API_TOKEN=replace_with_a_long_random_admin_token
