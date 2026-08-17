@@ -104,3 +104,42 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 - [x] Docker Configuration - Complete with docker-compose and Dockerfiles
 - [x] Documentation - Complete with README, SETUP, and DEPLOYMENT guides
 - [x] Test Suite - Complete with unit and integration tests
+
+- [x] Ajouter l’export des données juridiques extraites au format CSV depuis le tableau de bord
+- [x] Ajouter l’export des données juridiques extraites au format PDF depuis le tableau de bord
+- [x] Respecter les filtres actifs et les permissions publiques/admin lors des exports
+- [x] Ajouter les tests des exports CSV/PDF et de l’accès public aux routes
+- [x] Corriger le build Docker bloqué par la vérification de pnpm-lock.yaml
+- [x] Vérifier le rendu du dashboard et exécuter les tests finaux
+- [x] Créer un checkpoint après validation de la fonctionnalité d’export
+- [ ] Corriger les éléments en attente signalés par l’audit précédent du projet
+- [ ] Ajouter les contrôles de recherche, tri et filtres complets au dashboard
+- [ ] Restaurer les graphiques KPI du dashboard
+- [ ] Implémenter l’exécution réelle des jobs de scraping et d’extraction
+- [ ] Ajouter la conformité robots.txt au scraper
+- [ ] Ajouter le champ parties explicite à l’extraction IA
+- [ ] Ajouter les relations étrangères documents-entités
+- [ ] Ajouter une vraie protection de route admin et l’interface connexion/déconnexion
+- [ ] Ajouter un fichier d’environnement documenté utilisable sans exposer de secrets
+- [ ] Ajouter un test end-to-end du pipeline Alpha-Beta-Gamma-Delta-Interface
+- [ ] Ajouter une validation de performance sur un volume représentatif
+- [ ] Ajouter des tests de composants React
+- [ ] Valider la configuration Mistral en environnement configuré
+- [ ] Vérifier le flux OAuth de bout en bout
+- [ ] Finaliser les migrations et index de production
+- [x] Mettre à jour le README principal avec les nouvelles fonctionnalités
+- [ ] Vérifier les scripts Docker local et production (Docker indisponible dans le sandbox)
+- [ ] Corriger la page d’accueil de démonstration et relier le dashboard
+- [x] Vérifier le build TypeScript et le build frontend avant livraison
+- [x] Vérifier les journaux applicatifs et réseau après intégration
+- [x] Préparer les notes de livraison et le lien du checkpoint final
+- [x] Vérifier les contraintes de confidentialité et d’absence de données fictives
+- [ ] Vérifier la compatibilité avec le mode Autoscale
+- [x] Documenter les limitations lorsque MISTRAL_API_KEY n’est pas configurée
+- [x] Documenter la procédure de déploiement après correction Docker
+- [ ] Vérifier l’accessibilité clavier des contrôles d’export (à valider dans le navigateur)
+- [x] Vérifier la responsive design du dashboard et de la zone d’export
+- [x] Nettoyer les tests obsolètes ou non exécutables
+- [x] Générer un rapport final des fichiers modifiés et tests passés
+- [ ] Confirmer la disponibilité du projet dans le gestionnaire de versions
+- [ ] Livrer le projet final à l’utilisateur avec le checkpoint
