@@ -193,3 +193,10 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 - [ ] Connecter le scraper aux endpoints de recherche de l’API Légifrance et valider l’accès métier PISTE (code prêt, droits API sandbox encore requis)
 - [x] Enrichir l’interface React avec navigation métier, recherche Légifrance, connexion admin et résultats persistants
 - [x] Ajouter les tests d’intégration du contrat JURI, de l’authentification et documenter la configuration des clés d’accès Légifrance et Mistral
+
+## Correction du flux d’authentification administrateur et de la clé Mistral
+- [x] Auditer la distinction entre le jeton administrateur `ADMIN_API_TOKEN` et la clé Mistral `MISTRAL_API_KEY`
+- [ ] Permettre la configuration automatique ou le mode open-admin par défaut si aucun token n’est requis pour faciliter la prise en main locale
+- [ ] Ajouter un assistant de configuration visuel dans AdminPanel pour renseigner `MISTRAL_API_KEY` et `ADMIN_API_TOKEN`
+- [x] Valider le parcours backend sans erreur 401 avec des tests mis à jour ; l’interface demande maintenant explicitement `ADMIN_API_TOKEN`
+- [x] Corriger l’intégration Mistral pour utiliser l’endpoint HTTP officiel, valider le JSON structuré et appliquer un fallback sûr

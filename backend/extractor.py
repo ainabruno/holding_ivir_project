@@ -4,6 +4,8 @@ import os
 import time
 from typing import List, Literal
 
+import requests
+
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger("holding_ivir.extractor")
@@ -46,13 +48,7 @@ class LegalAIExtractor:
                 resume_automatique=f"Prévisualisation structurée pour {source_id}; configurez MISTRAL_API_KEY pour une extraction réelle."
             ).model_dump()
 
-        try:
-            from mistralai.client import MistralClient
-            from mistralai.models.chat_completion import ChatMessage
-            client = MistralClient(api_key=self.api_key)
-        except Exception as error:
-            logger.error("Mistral client initialization failed: %s", error)
-            return self.fallback(source_id)
+        api_url = os.getenv("MISTRAL_API_BASE_URL", "https://api.mistral.ai/v1/chat/completions")
 
         prompt = f"""
 Analysez ce texte juridique et retournez uniquement un JSON conforme à ce schéma :
@@ -70,14 +66,34 @@ Texte : {text[:6000]}
 
         for attempt in range(self.retries):
             try:
-                response = client.chat(
-                    model="mistral-small-latest",
-                    messages=[ChatMessage(role="user", content=prompt)],
-                    response_format={"type": "json_object"},
+                response = requests.post(
+                    api_url,
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": "mistral-small-latest",
+                        "messages": [{"role": "user", "content": prompt}],
+                        "response_format": {"type": "json_object"},
+                        "max_tokens": 1200,
+                    },
+                    timeout=45,
                 )
-                content = response.choices[0].message.content
+                response.raise_for_status()
+                response_payload = response.json()
+                choices = response_payload.get("choices") or []
+                message = choices[0].get("message") if choices else None
+                content = message.get("content") if isinstance(message, dict) else None
+                if not isinstance(content, str) or not content.strip():
+                    raise ValueError("Réponse Mistral vide ou non textuelle")
                 data = json.loads(content)
-                return LegalExtractionSchema(**data).model_dump()
+                if not isinstance(data, dict) or "error" in data:
+                    raise ValueError(data.get("error", "Réponse Mistral non structurée") if isinstance(data, dict) else "Réponse Mistral invalide")
+                validated = LegalExtractionSchema(**data)
+                if validated.niveau_confiance <= 0:
+                    raise ValueError("Score de confiance Mistral nul")
+                return validated.model_dump()
             except Exception as error:
                 logger.warning("Mistral extraction attempt %s/%s failed for %s: %s", attempt + 1, self.retries, source_id, error)
                 if attempt < self.retries - 1:

@@ -68,6 +68,12 @@ export default function AdminPanel() {
       setRunResult(result);
       setJobStatus(result.success ? pipelineStatusMessage("success") : pipelineStatusMessage("error", "Le traitement s’est terminé avec un avertissement."));
     } catch (error: any) {
+      const statusCode = error?.response?.status;
+      if (statusCode === 401 || statusCode === 403) {
+        pythonApi.clearAdminToken();
+        setIsAdmin(false);
+        setAuthError("Votre session administrateur est absente ou expirée. Reconnectez-vous avec ADMIN_API_TOKEN ; MISTRAL_API_KEY ne doit pas être saisie ici.");
+      }
       const detail = error?.response?.data?.detail || error?.message || "Erreur inconnue";
       setJobStatus(pipelineStatusMessage("error", detail));
     } finally {
@@ -84,6 +90,12 @@ export default function AdminPanel() {
       setRunResult(result);
       setJobStatus("Extraction terminée avec succès.");
     } catch (error: any) {
+      const statusCode = error?.response?.status;
+      if (statusCode === 401 || statusCode === 403) {
+        pythonApi.clearAdminToken();
+        setIsAdmin(false);
+        setAuthError("Votre session administrateur est absente ou expirée. Reconnectez-vous avec ADMIN_API_TOKEN ; MISTRAL_API_KEY ne doit pas être saisie ici.");
+      }
       const detail = error?.response?.data?.detail || error?.message || "Erreur inconnue";
       setJobStatus(pipelineStatusMessage("error", detail));
     } finally {
@@ -97,7 +109,7 @@ export default function AdminPanel() {
         <div className="mx-auto max-w-xl space-y-6">
           <header><p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-700">Accès sécurisé</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">Connexion administrateur</h1><p className="mt-2 text-sm leading-6 text-slate-600">Les actions de collecte, de recherche Légifrance et d’extraction modifient le corpus. Elles nécessitent le jeton Bearer configuré côté serveur.</p></header>
           {authError && <Alert className="border-red-200 bg-red-50"><AlertCircle className="h-4 w-4 text-red-600" /><AlertDescription className="text-red-800">{authError}</AlertDescription></Alert>}
-          <Card className="border-0 bg-white shadow-sm ring-1 ring-slate-200"><CardHeader><CardTitle>Se connecter à FastAPI</CardTitle><CardDescription>Le jeton est conservé uniquement en mémoire de session du navigateur et n’est pas affiché.</CardDescription></CardHeader><CardContent className="space-y-4"><label className="block space-y-2"><span className="text-sm font-medium">Jeton administrateur</span><Input type="password" value={adminToken} onChange={(event) => setAdminToken(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") void handleAdminLogin(); }} placeholder="Bearer token" autoComplete="current-password" /></label><Button type="button" onClick={handleAdminLogin} disabled={isLoading} className="w-full bg-slate-950 text-white hover:bg-slate-800">{isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Vérification…</> : "Se connecter"}</Button></CardContent></Card>
+          <Card className="border-0 bg-white shadow-sm ring-1 ring-slate-200"><CardHeader><CardTitle>Se connecter à FastAPI</CardTitle><CardDescription>Le jeton est conservé uniquement en mémoire de session du navigateur et n’est pas affiché. <strong>N’entrez pas MISTRAL_API_KEY ici :</strong> cette clé reste côté serveur et sert uniquement au module Bêta.</CardDescription></CardHeader><CardContent className="space-y-4"><label className="block space-y-2"><span className="text-sm font-medium">Jeton administrateur</span><Input type="password" value={adminToken} onChange={(event) => setAdminToken(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") void handleAdminLogin(); }} placeholder="Bearer token" autoComplete="current-password" /></label><Button type="button" onClick={handleAdminLogin} disabled={isLoading} className="w-full bg-slate-950 text-white hover:bg-slate-800">{isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Vérification…</> : "Se connecter"}</Button></CardContent></Card>
         </div>
       </main>
     );

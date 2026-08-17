@@ -41,6 +41,15 @@ def test_trigger_scraping_with_url(monkeypatch):
         "hash_dedup": "a" * 32,
     }
     monkeypatch.setattr("backend.main.LegalScraper.scrape_url", lambda self, url: [fake_document])
+    monkeypatch.setattr("backend.main.LegalAIExtractor.extract_entities", lambda self, text, source_id: {
+        "juridiction": "Paris",
+        "verdict": "partial",
+        "montant_alloue": None,
+        "parties": ["Partie demanderesse", "Partie défenderesse"],
+        "references_legales": ["Code civil"],
+        "niveau_confiance": 88.0,
+        "resume_automatique": "Extraction de test.",
+    })
     response = client.post("/api/admin/trigger-scraping", json={
         "source": "custom",
         "url": "https://example.test/legal",
