@@ -141,5 +141,13 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 - [x] Vérifier la responsive design du dashboard et de la zone d’export
 - [x] Nettoyer les tests obsolètes ou non exécutables
 - [x] Générer un rapport final des fichiers modifiés et tests passés
-- [ ] Confirmer la disponibilité du projet dans le gestionnaire de versions
-- [ ] Livrer le projet final à l’utilisateur avec le checkpoint
+- [x] Confirmer la disponibilité du projet dans le gestionnaire de versions
+- [x] Livrer le projet final à l’utilisateur avec le checkpoint
+
+- [x] Auditer les fichiers réellement présents dans le dépôt GitHub et le contexte Docker
+- [x] Corriger l’absence du patch wouter@3.7.1.patch dans le build Docker
+- [x] Vérifier les instructions de lancement depuis un clone GitHub propre
+- [x] Documenter le lancement local avec pnpm et Docker Compose
+- [x] Documenter les variables d’environnement nécessaires au déploiement
+- [x] Documenter la procédure de déploiement et le diagnostic des erreurs Docker
+- [x] Créer un checkpoint après validation du correctif de déploiement

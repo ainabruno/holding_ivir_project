@@ -1,0 +1,23 @@
+# Copy this file to .env and replace every placeholder before starting the app.
+# Never commit the resulting .env file.
+
+DATABASE_URL=mysql://holding_user:holding_password@localhost:3306/holding_ivir
+MISTRAL_API_KEY=replace_with_your_mistral_key
+JWT_SECRET=replace_with_a_long_random_secret
+
+VITE_APP_ID=replace_with_manus_app_id
+OAUTH_SERVER_URL=https://api.manus.im
+VITE_OAUTH_PORTAL_URL=https://portal.manus.im
+OWNER_NAME=Administrator
+OWNER_OPEN_ID=replace_with_owner_open_id
+
+BUILT_IN_FORGE_API_URL=https://api.manus.im
+BUILT_IN_FORGE_API_KEY=replace_with_forge_key
+VITE_FRONTEND_FORGE_API_URL=https://api.manus.im
+VITE_FRONTEND_FORGE_API_KEY=replace_with_frontend_forge_key
+
+VITE_APP_TITLE=Holding IVIR - Legal Intelligence Platform
+VITE_APP_LOGO=https://replace-with-logo-url.example/logo.png
+
+NODE_ENV=development
+PORT=3000

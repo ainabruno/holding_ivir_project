@@ -21,7 +21,7 @@ pnpm check
 pnpm dev
 ```
 
-La configuration applicative doit être fournie via l’environnement du projet. Les variables importantes sont `DATABASE_URL`, `MISTRAL_API_KEY`, `JWT_SECRET` et les variables Manus OAuth. Ne committez jamais de secrets dans le dépôt.
+Après le clonage, copiez `ENVIRONMENT.template` vers `.env`, puis remplacez les placeholders. Les variables importantes sont `DATABASE_URL`, `MISTRAL_API_KEY`, `JWT_SECRET` et les variables Manus OAuth. Ne committez jamais le fichier `.env` dans le dépôt.
 
 ## Tests et build
 
@@ -35,7 +35,7 @@ Les tests couvrent l’autorisation tRPC, le format CSV, la génération PDF, l�
 
 ## Docker
 
-Le Dockerfile utilise explicitement `pnpm@10.4.1`, version alignée sur le lockfile du projet, afin de rendre l’installation reproductible en production :
+Le Dockerfile utilise explicitement `pnpm@10.4.1` et copie le dossier `patches/` avant l’installation, en cohérence avec le lockfile du projet. Cela rend l’installation reproductible en production :
 
 ```bash
 docker build -t holding-ivir .

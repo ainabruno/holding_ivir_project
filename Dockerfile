@@ -6,6 +6,7 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
+COPY patches ./patches
 
 # Install dependencies
 RUN npm install -g pnpm@10.4.1 && pnpm --version && pnpm install --frozen-lockfile
@@ -23,6 +24,7 @@ WORKDIR /app
 
 # Install runtime dependencies only
 COPY package.json pnpm-lock.yaml ./
+COPY patches ./patches
 
 RUN npm install -g pnpm@10.4.1 && pnpm --version && pnpm install --prod --frozen-lockfile
 
