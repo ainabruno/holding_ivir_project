@@ -48,8 +48,8 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 ## Module Interface - React Dashboard
 - [x] Create dashboard layout with navigation
 - [x] Build documents table with sorting and pagination
-- [ ] Add search functionality for documents
-- [ ] Create filter panel (date, source, verdict)
+- [x] Add search functionality for documents
+- [x] Create filter panel (date, source, verdict)
 - [ ] Build entity detail view per document
 - [ ] Create admin control panel for triggering jobs
 - [ ] Add job status/progress indicators
@@ -113,14 +113,14 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 - [x] Vérifier le rendu du dashboard et exécuter les tests finaux
 - [x] Créer un checkpoint après validation de la fonctionnalité d’export
 - [ ] Corriger les éléments en attente signalés par l’audit précédent du projet
-- [ ] Ajouter les contrôles de recherche, tri et filtres complets au dashboard
+- [x] Ajouter les contrôles de recherche, tri et filtres complets au dashboard
 - [ ] Restaurer les graphiques KPI du dashboard
 - [ ] Implémenter l’exécution réelle des jobs de scraping et d’extraction
 - [ ] Ajouter la conformité robots.txt au scraper
 - [ ] Ajouter le champ parties explicite à l’extraction IA
 - [ ] Ajouter les relations étrangères documents-entités
 - [ ] Ajouter une vraie protection de route admin et l’interface connexion/déconnexion
-- [ ] Ajouter un fichier d’environnement documenté utilisable sans exposer de secrets
+- [x] Ajouter un fichier d’environnement documenté utilisable sans exposer de secrets
 - [ ] Ajouter un test end-to-end du pipeline Alpha-Beta-Gamma-Delta-Interface
 - [ ] Ajouter une validation de performance sur un volume représentatif
 - [ ] Ajouter des tests de composants React
@@ -129,7 +129,7 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 - [ ] Finaliser les migrations et index de production
 - [x] Mettre à jour le README principal avec les nouvelles fonctionnalités
 - [ ] Vérifier les scripts Docker local et production (Docker indisponible dans le sandbox)
-- [ ] Corriger la page d’accueil de démonstration et relier le dashboard
+- [x] Corriger la page d’accueil de démonstration et relier le dashboard
 - [x] Vérifier le build TypeScript et le build frontend avant livraison
 - [x] Vérifier les journaux applicatifs et réseau après intégration
 - [x] Préparer les notes de livraison et le lien du checkpoint final

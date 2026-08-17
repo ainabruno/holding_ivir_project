@@ -6,11 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Download, FileSpreadsheet, FileText, Loader2, Search, SlidersHorizontal } from "lucide-react";
+import { ArrowUpDown, Download, FileSpreadsheet, FileText, Loader2, Search, SlidersHorizontal } from "lucide-react";
 import {
   getFrontendPreviewDocuments,
   getFrontendPreviewStatistics,
 } from "@/lib/frontendPreview";
+import { sortLegalDocuments, type DocumentSortDirection, type DocumentSortKey, type SortableDocument } from "@/lib/documentSorting";
 
 const PAGE_SIZE = 25;
 type Verdict = "favorable" | "rejected" | "partial";
@@ -29,6 +30,30 @@ function verdictClass(verdict: string | null | undefined) {
   return "border-slate-200 bg-slate-50 text-slate-600";
 }
 
+type SortButtonProps = {
+  label: string;
+  sortKey: DocumentSortKey;
+  sortKeyState: DocumentSortKey;
+  direction: DocumentSortDirection;
+  onSort: (key: DocumentSortKey, direction: DocumentSortDirection) => void;
+};
+
+function SortButton({ label, sortKey, sortKeyState, direction, onSort }: SortButtonProps) {
+  const isActive = sortKey === sortKeyState;
+  const nextDirection = isActive && direction === "asc" ? "desc" : "asc";
+  return (
+    <button
+      type="button"
+      className="inline-flex items-center gap-1 rounded px-1 py-0.5 text-left font-medium transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600"
+      onClick={() => onSort(sortKey, nextDirection)}
+      aria-label={`Trier par ${label} ${nextDirection === "asc" ? "croissant" : "décroissant"}`}
+    >
+      {label}
+      <ArrowUpDown className={`h-3.5 w-3.5 ${isActive ? "text-teal-700" : "text-slate-400"}`} aria-hidden="true" />
+    </button>
+  );
+}
+
 export default function Dashboard() {
   const [offset, setOffset] = useState(0);
   const [search, setSearch] = useState("");
@@ -36,6 +61,8 @@ export default function Dashboard() {
   const [verdict, setVerdict] = useState<"all" | Verdict>("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [sortKey, setSortKey] = useState<DocumentSortKey>("date");
+  const [sortDirection, setSortDirection] = useState<DocumentSortDirection>("desc");
 
   const filters = useMemo(() => ({
     search: search.trim() || undefined,
@@ -56,6 +83,10 @@ export default function Dashboard() {
   const visibleDocumentsData = frontendOnly ? previewDocumentsData : documentsData;
   const visibleStats = frontendOnly ? previewStats : stats;
   const docsLoading = frontendOnly ? false : apiDocsLoading;
+  const sortedDocuments = useMemo(
+    () => visibleDocumentsData ? sortLegalDocuments(visibleDocumentsData.documents as SortableDocument[], sortKey, sortDirection) : [],
+    [sortDirection, sortKey, visibleDocumentsData],
+  );
 
   const exportQuery = useMemo(() => {
     const params = new URLSearchParams();
@@ -78,6 +109,8 @@ export default function Dashboard() {
     setVerdict("all");
     setStartDate("");
     setEndDate("");
+    setSortKey("date");
+    setSortDirection("desc");
     setOffset(0);
   };
 
@@ -167,7 +200,7 @@ export default function Dashboard() {
         <Card className="border-0 bg-white shadow-sm ring-1 ring-slate-200/70">
           <CardHeader className="border-b border-slate-100 pb-4"><div className="flex items-center justify-between gap-3"><div><CardTitle>Données juridiques extraites</CardTitle><CardDescription className="mt-1">{visibleDocumentsData?.count ?? 0} résultat(s) correspondant aux filtres.</CardDescription></div><Download className="h-5 w-5 text-slate-400" /></div></CardHeader>
           <CardContent className="p-0">
-            {docsLoading ? <div className="flex h-48 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-teal-700" /></div> : visibleDocumentsData?.documents?.length ? <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Source</TableHead><TableHead>Document</TableHead><TableHead>Juridiction</TableHead><TableHead>Verdict</TableHead><TableHead>Date</TableHead><TableHead>Confiance</TableHead></TableRow></TableHeader><TableBody>{visibleDocumentsData.documents.map((doc) => { const entity = doc.extractedEntity; return <TableRow key={`${doc.id}-${entity?.sourceId ?? "document"}`}><TableCell><Badge variant="outline">{doc.source}</Badge></TableCell><TableCell className="min-w-[220px] max-w-sm"><div className="truncate font-medium">{doc.typeDocument || "Document juridique"}</div><div className="truncate text-xs text-slate-500">{doc.idSource}</div></TableCell><TableCell>{entity?.juridiction || doc.juridiction || "—"}</TableCell><TableCell><Badge variant="outline" className={verdictClass(entity?.verdict)}>{entity?.verdict || "Non classé"}</Badge></TableCell><TableCell className="whitespace-nowrap">{dateLabel(doc.dateDecision || doc.dateCollecte)}</TableCell><TableCell>{entity?.niveauConfiance == null ? "—" : `${entity.niveauConfiance}%`}</TableCell></TableRow>; })}</TableBody></Table></div> : <div className="px-6 py-14 text-center text-sm text-slate-500">Aucun document ne correspond aux filtres.</div>}
+            {docsLoading ? <div className="flex h-48 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-teal-700" /></div> : visibleDocumentsData?.documents?.length ? <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead><SortButton label="Source" sortKey="source" sortKeyState={sortKey} direction={sortDirection} onSort={(key, direction) => { setSortKey(key); setSortDirection(direction); }} /></TableHead><TableHead>Document</TableHead><TableHead>Juridiction</TableHead><TableHead><SortButton label="Verdict" sortKey="verdict" sortKeyState={sortKey} direction={sortDirection} onSort={(key, direction) => { setSortKey(key); setSortDirection(direction); }} /></TableHead><TableHead><SortButton label="Date" sortKey="date" sortKeyState={sortKey} direction={sortDirection} onSort={(key, direction) => { setSortKey(key); setSortDirection(direction); }} /></TableHead><TableHead><SortButton label="Confiance" sortKey="confidence" sortKeyState={sortKey} direction={sortDirection} onSort={(key, direction) => { setSortKey(key); setSortDirection(direction); }} /></TableHead></TableRow></TableHeader><TableBody>{sortedDocuments.map((doc) => { const entity = doc.extractedEntity; return <TableRow key={`${doc.id}-${entity?.sourceId ?? "document"}`}><TableCell><Badge variant="outline">{doc.source}</Badge></TableCell><TableCell className="min-w-[220px] max-w-sm"><div className="truncate font-medium">{doc.typeDocument || "Document juridique"}</div><div className="truncate text-xs text-slate-500">{doc.idSource}</div></TableCell><TableCell>{entity?.juridiction || doc.juridiction || "—"}</TableCell><TableCell><Badge variant="outline" className={verdictClass(entity?.verdict)}>{entity?.verdict || "Non classé"}</Badge></TableCell><TableCell className="whitespace-nowrap">{dateLabel(doc.dateDecision || doc.dateCollecte)}</TableCell><TableCell>{entity?.niveauConfiance == null ? "—" : `${entity.niveauConfiance}%`}</TableCell></TableRow>; })}</TableBody></Table></div> : <div className="px-6 py-14 text-center text-sm text-slate-500">Aucun document ne correspond aux filtres.</div>}
             <div className="flex flex-col gap-3 border-t border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between"><span className="text-xs text-slate-500">Page {Math.floor(offset / PAGE_SIZE) + 1}</span><div className="flex gap-2"><Button onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))} disabled={offset === 0} variant="outline" size="sm">Précédent</Button><Button onClick={() => setOffset(offset + PAGE_SIZE)} disabled={!visibleDocumentsData || offset + PAGE_SIZE >= visibleDocumentsData.count} variant="outline" size="sm">Suivant</Button></div></div>
           </CardContent>
         </Card>
