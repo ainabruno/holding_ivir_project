@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { Fragment, useEffect, useMemo, useState } from "react";
 import { pythonApi } from "@/lib/pythonApiClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,11 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUpDown, Download, FileSpreadsheet, FileText, Loader2, Search, SlidersHorizontal } from "lucide-react";
+import { ArrowUpDown, ChevronDown, Download, ExternalLink, FileSpreadsheet, FileText, Loader2, Search, SlidersHorizontal } from "lucide-react";
 import {
   getFrontendPreviewDocuments,
   getFrontendPreviewStatistics,
 } from "@/lib/frontendPreview";
+import { normalizePreviewList, previewAmount } from "@/lib/legalPreview";
 import { sortLegalDocuments, type DocumentSortDirection, type DocumentSortKey, type SortableDocument } from "@/lib/documentSorting";
 
 const PAGE_SIZE = 25;
@@ -54,6 +55,42 @@ function SortButton({ label, sortKey, sortKeyState, direction, onSort }: SortBut
   );
 }
 
+export function PreviewDetails({ doc }: { doc: any }) {
+  const entity = doc.extractedEntity ?? {};
+  const parties = normalizePreviewList(entity.parties);
+  const references = normalizePreviewList(entity.referencesLegales);
+
+  return (
+    <div className="grid gap-4 rounded-lg bg-slate-50 p-4 text-sm md:grid-cols-2 xl:grid-cols-4">
+      <div className="space-y-1"><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Parties</p><p className="text-slate-800">{parties.length ? parties.join(" · ") : "Aucune partie extraite"}</p></div>
+      <div className="space-y-1"><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Références légales</p><p className="text-slate-800">{references.length ? references.join(" · ") : "Aucune référence extraite"}</p></div>
+      <div className="space-y-1"><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Montant alloué</p><p className="font-medium text-slate-800">{previewAmount(entity.montantAlloue)}</p></div>
+      <div className="space-y-1"><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Confiance IA</p><p className="font-medium text-slate-800">{entity.niveauConfiance == null ? "—" : `${entity.niveauConfiance}%`}</p></div>
+      <div className="space-y-1 md:col-span-2 xl:col-span-4"><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Résumé automatique</p><p className="leading-6 text-slate-700">{entity.resumeAutomatique || "Aucun résumé disponible."}</p></div>
+      <div className="space-y-1 md:col-span-2 xl:col-span-4"><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Source</p>{doc.urlSource ? <a href={doc.urlSource} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 break-all text-teal-700 underline underline-offset-2 hover:text-teal-900">{doc.urlSource}<ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /></a> : <p className="text-slate-700">—</p>}</div>
+    </div>
+  );
+}
+
+export function PreviewRow({ doc, expanded, onToggle }: { doc: any; expanded: boolean; onToggle: () => void }) {
+  const entity = doc.extractedEntity;
+  const rowId = `${doc.id}-${entity?.sourceId ?? "document"}`;
+  return (
+    <Fragment>
+      <TableRow className={expanded ? "bg-slate-50" : undefined}>
+        <TableCell><Badge variant="outline">{doc.source}</Badge></TableCell>
+        <TableCell className="min-w-[220px] max-w-sm"><div className="truncate font-medium">{doc.typeDocument || "Document juridique"}</div><div className="truncate text-xs text-slate-500">{doc.idSource}</div></TableCell>
+        <TableCell>{entity?.juridiction || doc.juridiction || "—"}</TableCell>
+        <TableCell><Badge variant="outline" className={verdictClass(entity?.verdict)}>{entity?.verdict || "Non classé"}</Badge></TableCell>
+        <TableCell className="whitespace-nowrap">{dateLabel(doc.dateDecision || doc.dateCollecte)}</TableCell>
+        <TableCell>{entity?.niveauConfiance == null ? "—" : `${entity.niveauConfiance}%`}</TableCell>
+        <TableCell className="text-right"><Button type="button" variant="ghost" size="sm" aria-expanded={expanded} aria-controls={`preview-${rowId}`} aria-label={expanded ? "Masquer les détails" : "Afficher les détails"} onClick={onToggle}><ChevronDown className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`} aria-hidden="true" /></Button></TableCell>
+      </TableRow>
+      {expanded && <TableRow id={`preview-${rowId}`}><TableCell colSpan={7} className="p-3"><PreviewDetails doc={doc} /></TableCell></TableRow>}
+    </Fragment>
+  );
+}
+
 export default function Dashboard() {
   const [offset, setOffset] = useState(0);
   const [search, setSearch] = useState("");
@@ -63,6 +100,7 @@ export default function Dashboard() {
   const [endDate, setEndDate] = useState("");
   const [sortKey, setSortKey] = useState<DocumentSortKey>("date");
   const [sortDirection, setSortDirection] = useState<DocumentSortDirection>("desc");
+  const [expandedId, setExpandedId] = useState<number | string | null>(null);
 
   const filters = useMemo(() => ({
     search: search.trim() || undefined,
@@ -216,9 +254,9 @@ export default function Dashboard() {
         </Card>
 
         <Card className="border-0 bg-white shadow-sm ring-1 ring-slate-200/70">
-          <CardHeader className="border-b border-slate-100 pb-4"><div className="flex items-center justify-between gap-3"><div><CardTitle>Données juridiques extraites</CardTitle><CardDescription className="mt-1">{visibleDocumentsData?.count ?? 0} résultat(s) correspondant aux filtres.</CardDescription></div><Download className="h-5 w-5 text-slate-400" /></div></CardHeader>
+          <CardHeader className="border-b border-slate-100 pb-4"><div className="flex items-center justify-between gap-3"><div><CardTitle>Aperçu avant export</CardTitle><CardDescription className="mt-1">{visibleDocumentsData?.count ?? 0} résultat(s). Ouvrez une ligne pour vérifier les entités avant de télécharger le CSV ou le PDF.</CardDescription></div><Download className="h-5 w-5 text-slate-400" aria-hidden="true" /></div></CardHeader>
           <CardContent className="p-0">
-            {docsLoading ? <div className="flex h-48 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-teal-700" /></div> : visibleDocumentsData?.documents?.length ? <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead><SortButton label="Source" sortKey="source" sortKeyState={sortKey} direction={sortDirection} onSort={(key, direction) => { setSortKey(key); setSortDirection(direction); }} /></TableHead><TableHead>Document</TableHead><TableHead>Juridiction</TableHead><TableHead><SortButton label="Verdict" sortKey="verdict" sortKeyState={sortKey} direction={sortDirection} onSort={(key, direction) => { setSortKey(key); setSortDirection(direction); }} /></TableHead><TableHead><SortButton label="Date" sortKey="date" sortKeyState={sortKey} direction={sortDirection} onSort={(key, direction) => { setSortKey(key); setSortDirection(direction); }} /></TableHead><TableHead><SortButton label="Confiance" sortKey="confidence" sortKeyState={sortKey} direction={sortDirection} onSort={(key, direction) => { setSortKey(key); setSortDirection(direction); }} /></TableHead></TableRow></TableHeader><TableBody>{sortedDocuments.map((doc: any) => { const entity = doc.extractedEntity; return <TableRow key={`${doc.id}-${entity?.sourceId ?? "document"}`}><TableCell><Badge variant="outline">{doc.source}</Badge></TableCell><TableCell className="min-w-[220px] max-w-sm"><div className="truncate font-medium">{doc.typeDocument || "Document juridique"}</div><div className="truncate text-xs text-slate-500">{doc.idSource}</div></TableCell><TableCell>{entity?.juridiction || doc.juridiction || "—"}</TableCell><TableCell><Badge variant="outline" className={verdictClass(entity?.verdict)}>{entity?.verdict || "Non classé"}</Badge></TableCell><TableCell className="whitespace-nowrap">{dateLabel(doc.dateDecision || doc.dateCollecte)}</TableCell><TableCell>{entity?.niveauConfiance == null ? "—" : `${entity.niveauConfiance}%`}</TableCell></TableRow>; })}</TableBody></Table></div> : <div className="px-6 py-14 text-center text-sm text-slate-500">Aucun document ne correspond aux filtres.</div>}
+            {docsLoading ? <div className="flex h-48 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-teal-700" aria-label="Chargement des documents" /></div> : visibleDocumentsData?.documents?.length ? <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead><SortButton label="Source" sortKey="source" sortKeyState={sortKey} direction={sortDirection} onSort={(key, direction) => { setSortKey(key); setSortDirection(direction); }} /></TableHead><TableHead>Document</TableHead><TableHead>Juridiction</TableHead><TableHead><SortButton label="Verdict" sortKey="verdict" sortKeyState={sortKey} direction={sortDirection} onSort={(key, direction) => { setSortKey(key); setSortDirection(direction); }} /></TableHead><TableHead><SortButton label="Date" sortKey="date" sortKeyState={sortKey} direction={sortDirection} onSort={(key, direction) => { setSortKey(key); setSortDirection(direction); }} /></TableHead><TableHead><SortButton label="Confiance" sortKey="confidence" sortKeyState={sortKey} direction={sortDirection} onSort={(key, direction) => { setSortKey(key); setSortDirection(direction); }} /></TableHead><TableHead><span className="sr-only">Prévisualisation</span></TableHead></TableRow></TableHeader><TableBody>{sortedDocuments.map((doc: any) => <PreviewRow key={`${doc.id}-${doc.extractedEntity?.sourceId ?? "document"}`} doc={doc} expanded={expandedId === doc.id} onToggle={() => setExpandedId(expandedId === doc.id ? null : doc.id)} />)}</TableBody></Table></div> : <div className="px-6 py-14 text-center text-sm text-slate-500">Aucun document ne correspond aux filtres.</div>}
             <div className="flex flex-col gap-3 border-t border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between"><span className="text-xs text-slate-500">Page {Math.floor(offset / PAGE_SIZE) + 1}</span><div className="flex gap-2"><Button onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))} disabled={offset === 0} variant="outline" size="sm">Précédent</Button><Button onClick={() => setOffset(offset + PAGE_SIZE)} disabled={!visibleDocumentsData || offset + PAGE_SIZE >= visibleDocumentsData.count} variant="outline" size="sm">Suivant</Button></div></div>
           </CardContent>
         </Card>

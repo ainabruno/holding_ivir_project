@@ -175,3 +175,10 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 - [x] Afficher le statut, le nombre ajouté et les erreurs dans AdminPanel
 - [x] Ajouter les tests API et interface du lancement par URL
 - [x] Mettre à jour la documentation et créer un checkpoint de cette fonctionnalité
+
+- [x] Ajouter un tableau de prévisualisation détaillée des entités juridiques extraites
+- [x] Afficher les parties, références légales, montants, juridiction, verdict, confiance et résumé
+- [x] Conserver les filtres, le tri et la pagination sur la prévisualisation
+- [x] Ajouter un état vide et un état de chargement cohérents avec les exports
+- [x] Ajouter les tests UI de prévisualisation et de cohérence avec les données exportées
+- [x] Vérifier la prévisualisation sur desktop/mobile et créer un checkpoint

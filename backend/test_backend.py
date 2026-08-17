@@ -118,6 +118,11 @@ def test_csv_export_format():
     csv_text = generate_csv_export(rows)
     assert csv_text.startswith("\ufeff")
     assert "test-1" in csv_text
+    assert "Paris" in csv_text
+    assert "favorable" in csv_text
+    assert "A; B" in csv_text or "A, B" in csv_text
+    assert "Art 1" in csv_text
+    assert "Test résumé" in csv_text
 
 def test_pdf_export_bytes():
     rows = [{
