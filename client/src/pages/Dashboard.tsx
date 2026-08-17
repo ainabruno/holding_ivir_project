@@ -102,7 +102,7 @@ export default function Dashboard() {
   const visibleStats = frontendOnly ? previewStats : apiStats;
   const docsLoading = frontendOnly ? false : apiDocsLoading;
   const sortedDocuments = useMemo(
-    () => visibleDocumentsData ? sortLegalDocuments(visibleDocumentsData.documents as SortableDocument[], sortKey, sortDirection) : [],
+    () => visibleDocumentsData && Array.isArray(visibleDocumentsData.documents) ? sortLegalDocuments(visibleDocumentsData.documents as SortableDocument[], sortKey, sortDirection) : [],
     [sortDirection, sortKey, visibleDocumentsData],
   );
 
