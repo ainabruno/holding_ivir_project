@@ -112,16 +112,16 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 - [x] Corriger le build Docker bloqué par la vérification de pnpm-lock.yaml
 - [x] Vérifier le rendu du dashboard et exécuter les tests finaux
 - [x] Créer un checkpoint après validation de la fonctionnalité d’export
-- [ ] Corriger les éléments en attente signalés par l’audit précédent du projet
+- [ ] Corriger les éléments en attente signalés par l’audit précédent du projet (hors périmètre du lancement URL)
 - [x] Ajouter les contrôles de recherche, tri et filtres complets au dashboard
 - [ ] Restaurer les graphiques KPI du dashboard
 - [x] Implémenter l’exécution réelle des jobs de scraping et d’extraction
 - [x] Ajouter la conformité robots.txt au scraper (refus par défaut et Crawl-delay testés)
-- [ ] Ajouter le champ parties explicite à l’extraction IA
-- [ ] Ajouter les relations étrangères documents-entités
+- [x] Ajouter le champ parties explicite à l’extraction IA
+- [x] Ajouter les relations étrangères documents-entités
 - [ ] Ajouter une vraie protection de route admin et l’interface connexion/déconnexion
 - [x] Ajouter un fichier d’environnement documenté utilisable sans exposer de secrets
-- [ ] Ajouter un test end-to-end du pipeline Alpha-Beta-Gamma-Delta-Interface
+- [x] Ajouter un test d’intégration API du pipeline Alpha-Beta-Gamma-Delta (URL + extraction + stockage SQLite + retour dashboard)
 - [ ] Ajouter une validation de performance sur un volume représentatif
 - [ ] Ajouter des tests de composants React
 - [ ] Valider la configuration Mistral en environnement configuré

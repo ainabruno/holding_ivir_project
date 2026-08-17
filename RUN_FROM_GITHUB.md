@@ -61,10 +61,14 @@ Ouvrez ensuite `http://localhost:5173/`. Les boutons CSV/PDF sont désactivés d
 
 ## Lancer un traitement depuis l’interface d’administration
 
-Avec le backend FastAPI démarré, ouvrez `http://localhost:3000/admin`. Saisissez l’URL complète de la source juridique, choisissez le type de source, puis cliquez sur **Lancer le traitement**. Le backend télécharge l’URL, applique le retry et la déduplication, enregistre les documents, puis lance l’extraction Pydantic/Mistral. Le panneau affiche le statut, le nombre de documents ajoutés et les erreurs de validation éventuelles.
+Avec le backend FastAPI démarré et le frontend configuré avec `VITE_PYTHON_API_URL=http://localhost:8000`, ouvrez `http://localhost:5173/admin` en développement ou `http://localhost:3000/admin` avec Docker. Saisissez l’URL complète de la source juridique, choisissez le type de source, puis cliquez sur **Lancer le traitement**. Le backend télécharge l’URL, applique le retry et la déduplication, enregistre les documents, puis lance l’extraction Pydantic/Mistral. Le panneau affiche le statut, le nombre de documents ajoutés et les erreurs de validation éventuelles.
 
 ```bash
-python3 -m uvicorn backend.main:app --reload --port 3000
+# Terminal 1 : backend FastAPI
+TESTING=false python3 -m uvicorn backend.main:app --reload --port 8000
+
+# Terminal 2 : frontend React
+VITE_PYTHON_API_URL=http://localhost:8000 pnpm dev:frontend
 ```
 
 Exemples d’URL : `https://fr.wikipedia.org/wiki/Droit` ou une URL HTTP publique autorisée par la source. Une URL doit être complète et commencer par `http://` ou `https://`.

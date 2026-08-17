@@ -51,6 +51,14 @@ def test_trigger_scraping_with_url(monkeypatch):
     assert data["documents_added"] == 1
     assert "https://example.test/legal" in data["message"]
 
+    dashboard_response = client.get("/api/legal/documents?limit=10")
+    assert dashboard_response.status_code == 200
+    dashboard_data = dashboard_response.json()
+    assert dashboard_data["count"] == 1
+    assert dashboard_data["documents"][0]["urlSource"] == "https://example.test/legal"
+    assert dashboard_data["documents"][0]["extractedEntity"]["verdict"] in ["favorable", "rejected", "partial"]
+    assert dashboard_data["documents"][0]["extractedEntity"]["parties"] == ["Partie demanderesse", "Partie défenderesse"]
+
 def test_trigger_scraping_rejects_invalid_url():
     response = client.post("/api/admin/trigger-scraping", json={
         "source": "custom",

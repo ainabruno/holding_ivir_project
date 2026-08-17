@@ -19,5 +19,9 @@ VITE_FRONTEND_FORGE_API_KEY=replace_with_frontend_forge_key
 VITE_APP_TITLE=Holding IVIR - Legal Intelligence Platform
 VITE_APP_LOGO=https://replace-with-logo-url.example/logo.png
 
+# Frontend Vite sur 5173 vers FastAPI sur 8000 en développement local.
+# En Docker ou en production unifiée, laissez cette variable vide.
+VITE_PYTHON_API_URL=http://localhost:8000
+
 NODE_ENV=development
 PORT=3000
