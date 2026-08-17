@@ -160,6 +160,18 @@ def trigger_scraping(payload: TriggerScrapingRequest, db: Session = Depends(get_
         "timestamp": datetime.utcnow().isoformat(),
     }
 
+@app.get("/api/admin/status")
+def admin_status(_: str = Depends(require_admin)):
+    """Expose non-sensitive configuration flags to the authenticated admin UI."""
+    mistral_key = os.getenv("MISTRAL_API_KEY", "").strip()
+    legifrance_configured = bool(os.getenv("LEGIFRANCE_CLIENT_ID") and os.getenv("LEGIFRANCE_CLIENT_SECRET"))
+    return {
+        "mistral_configured": bool(mistral_key and not mistral_key.startswith("replace") and len(mistral_key) >= 10),
+        "legifrance_configured": legifrance_configured,
+        "admin_protection_enabled": bool(os.getenv("ADMIN_API_TOKEN", "").strip()),
+        "environment": os.getenv("NODE_ENV", os.getenv("ENVIRONMENT", "production")),
+    }
+
 @app.get("/api/admin/legifrance/status")
 def legifrance_status():
     """Return configuration status without exposing client credentials."""

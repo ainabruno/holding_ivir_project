@@ -26,10 +26,15 @@ export default function AdminPanel() {
   const [isAdmin, setIsAdmin] = useState(frontendOnly);
   const [adminToken, setAdminToken] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
+  const [systemStatus, setSystemStatus] = useState<{ mistral_configured: boolean; legifrance_configured: boolean; admin_protection_enabled: boolean; environment: string } | null>(null);
 
   useEffect(() => {
     if (frontendOnly) return;
-    pythonApi.me().then((user) => setIsAdmin(user?.role === "admin")).catch(() => setIsAdmin(false));
+    pythonApi.me().then((user) => {
+      const authenticated = user?.role === "admin";
+      setIsAdmin(authenticated);
+      if (authenticated) pythonApi.getAdminStatus().then(setSystemStatus).catch(() => setSystemStatus(null));
+    }).catch(() => setIsAdmin(false));
   }, []);
 
   const handleAdminLogin = async () => {
@@ -43,6 +48,7 @@ export default function AdminPanel() {
       await pythonApi.authenticateAdmin(adminToken.trim());
       setIsAdmin(true);
       setAdminToken("");
+      pythonApi.getAdminStatus().then(setSystemStatus).catch(() => setSystemStatus(null));
     } catch (error: any) {
       pythonApi.clearAdminToken();
       setAuthError(error?.response?.data?.detail || "Jeton administrateur refusé par l’API FastAPI.");
@@ -62,6 +68,7 @@ export default function AdminPanel() {
     setAuthError(null);
     setJobStatus(null);
     setRunResult(null);
+    setSystemStatus(null);
   };
 
   const handleTriggerPipeline = async () => {
@@ -136,6 +143,8 @@ export default function AdminPanel() {
         </header>
 
         {frontendOnly && <Alert className="border-amber-200 bg-amber-50"><AlertCircle className="h-4 w-4 text-amber-600" /><AlertDescription className="text-amber-900">Mode front-only : le bouton est visible pour prévisualiser l’interface, mais l’exécution réelle nécessite le backend FastAPI lancé.</AlertDescription></Alert>}
+
+        {systemStatus && <section className="grid gap-3 sm:grid-cols-3" aria-label="État de configuration serveur"><Card className="border-0 bg-white shadow-sm ring-1 ring-slate-200"><CardContent className="p-4"><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Mistral IA</p><p className={`mt-2 text-sm font-semibold ${systemStatus.mistral_configured ? "text-emerald-700" : "text-amber-700"}`}>{systemStatus.mistral_configured ? "Clé configurée" : "Clé manquante"}</p><p className="mt-1 text-xs text-slate-500">Jamais affichée au navigateur</p></CardContent></Card><Card className="border-0 bg-white shadow-sm ring-1 ring-slate-200"><CardContent className="p-4"><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Légifrance PISTE</p><p className={`mt-2 text-sm font-semibold ${systemStatus.legifrance_configured ? "text-emerald-700" : "text-amber-700"}`}>{systemStatus.legifrance_configured ? "Credentials configurés" : "À configurer"}</p><p className="mt-1 text-xs text-slate-500">Les droits API restent contrôlés par PISTE</p></CardContent></Card><Card className="border-0 bg-white shadow-sm ring-1 ring-slate-200"><CardContent className="p-4"><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Protection admin</p><p className="mt-2 text-sm font-semibold text-emerald-700">Bearer active</p><p className="mt-1 text-xs text-slate-500">Environnement : {systemStatus.environment}</p></CardContent></Card></section>}
 
         {jobStatus && <Alert className={jobStatus.startsWith("Erreur") ? "border-red-200 bg-red-50" : "border-emerald-200 bg-emerald-50"}>{jobStatus.startsWith("Erreur") ? <AlertCircle className="h-4 w-4 text-red-600" /> : <CheckCircle className="h-4 w-4 text-emerald-600" />}<AlertDescription className={jobStatus.startsWith("Erreur") ? "text-red-800" : "text-emerald-800"}>{jobStatus}</AlertDescription></Alert>}
 

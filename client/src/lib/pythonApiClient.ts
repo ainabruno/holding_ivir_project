@@ -58,6 +58,16 @@ export const pythonApi = {
     return res.data;
   },
 
+  async getAdminStatus() {
+    const res = await api.get("/api/admin/status");
+    return res.data as {
+      mistral_configured: boolean;
+      legifrance_configured: boolean;
+      admin_protection_enabled: boolean;
+      environment: string;
+    };
+  },
+
   async getLegifranceStatus() {
     const res = await api.get("/api/admin/legifrance/status");
     return res.data as { configured: boolean; apiBaseUrl: string; environment: string };
