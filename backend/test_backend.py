@@ -58,6 +58,38 @@ def test_trigger_scraping_rejects_invalid_url():
     })
     assert response.status_code == 422
 
+def test_scraper_respects_robots_denial(monkeypatch):
+    class DenyRobots:
+        def __init__(self, url):
+            self.url = url
+        def read(self):
+            return None
+        def can_fetch(self, user_agent, url):
+            return False
+        def crawl_delay(self, user_agent):
+            return None
+    monkeypatch.setattr("backend.scraper.urllib.robotparser.RobotFileParser", DenyRobots)
+    with pytest.raises(PermissionError, match="robots.txt"):
+        LegalScraper().scrape_url("https://example.test/legal")
+
+def test_scraper_honors_robots_crawl_delay(monkeypatch):
+    delays = []
+    class AllowRobots:
+        def __init__(self, url):
+            self.url = url
+        def read(self):
+            return None
+        def can_fetch(self, user_agent, url):
+            return True
+        def crawl_delay(self, user_agent):
+            return 0.25
+    monkeypatch.setattr("backend.scraper.urllib.robotparser.RobotFileParser", AllowRobots)
+    monkeypatch.setattr("backend.scraper.time.sleep", lambda seconds: delays.append(seconds))
+    scraper = LegalScraper()
+    monkeypatch.setattr(scraper, "fetch_with_retry", lambda url: "<html><body><main><p>Un texte juridique suffisamment long pour le test de crawl delay.</p></main></body></html>")
+    scraper.scrape_url("https://example.test/legal")
+    assert delays == [0.25]
+
 def test_csv_export_format():
     rows = [{
         "document_id": 1,

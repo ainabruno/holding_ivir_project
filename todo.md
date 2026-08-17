@@ -51,8 +51,8 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 - [x] Add search functionality for documents
 - [x] Create filter panel (date, source, verdict)
 - [ ] Build entity detail view per document
-- [ ] Create admin control panel for triggering jobs
-- [ ] Add job status/progress indicators
+- [x] Create admin control panel for triggering jobs
+- [x] Add job status/progress indicators
 - [x] Implement statistics dashboard with charts
 - [ ] Add verdict distribution chart (pie/bar)
 - [ ] Add documents over time chart (line)
@@ -115,8 +115,8 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 - [ ] Corriger les éléments en attente signalés par l’audit précédent du projet
 - [x] Ajouter les contrôles de recherche, tri et filtres complets au dashboard
 - [ ] Restaurer les graphiques KPI du dashboard
-- [ ] Implémenter l’exécution réelle des jobs de scraping et d’extraction
-- [ ] Ajouter la conformité robots.txt au scraper
+- [x] Implémenter l’exécution réelle des jobs de scraping et d’extraction
+- [x] Ajouter la conformité robots.txt au scraper (refus par défaut et Crawl-delay testés)
 - [ ] Ajouter le champ parties explicite à l’extraction IA
 - [ ] Ajouter les relations étrangères documents-entités
 - [ ] Ajouter une vraie protection de route admin et l’interface connexion/déconnexion
@@ -174,4 +174,4 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 - [x] Exécuter l’extraction IA sur les documents collectés après le scraping
 - [x] Afficher le statut, le nombre ajouté et les erreurs dans AdminPanel
 - [x] Ajouter les tests API et interface du lancement par URL
-- [ ] Mettre à jour la documentation et créer un checkpoint de cette fonctionnalité
+- [x] Mettre à jour la documentation et créer un checkpoint de cette fonctionnalité
