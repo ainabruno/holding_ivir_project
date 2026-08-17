@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, CheckCircle, AlertCircle, Play, Database } from "lucide-react";
+import { Loader2, CheckCircle, AlertCircle, Play, Database, LogOut } from "lucide-react";
 import { isValidSourceUrl, pipelineStatusMessage } from "@/lib/adminPipeline";
 
 const frontendOnly = import.meta.env.VITE_FRONTEND_ONLY === "true";
@@ -49,6 +49,19 @@ export default function AdminPanel() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleLogout = async () => {
+    pythonApi.clearAdminToken();
+    try {
+      await pythonApi.logout();
+    } catch {
+      // The client-side token is already cleared even if the stateless API logout fails.
+    }
+    setIsAdmin(false);
+    setAuthError(null);
+    setJobStatus(null);
+    setRunResult(null);
   };
 
   const handleTriggerPipeline = async () => {
@@ -119,9 +132,7 @@ export default function AdminPanel() {
     <main className="min-h-screen bg-slate-50 p-4 text-slate-950 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-5xl space-y-6">
         <header>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-700">Module Delta · Administration</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Lancer un traitement juridique</h1>
-          <p className="mt-2 text-sm text-slate-600">Indiquez l’URL à analyser. Le clic lance le scraping Python, la déduplication, puis l’extraction IA sur chaque document collecté.</p>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-700">Module Delta · Administration</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">Lancer un traitement juridique</h1><p className="mt-2 text-sm text-slate-600">Indiquez l’URL à analyser. Le clic lance le scraping Python, la déduplication, puis l’extraction IA sur chaque document collecté.</p></div><Button type="button" variant="outline" size="sm" onClick={handleLogout} className="shrink-0"><LogOut className="mr-2 h-4 w-4" />Se déconnecter</Button></div>
         </header>
 
         {frontendOnly && <Alert className="border-amber-200 bg-amber-50"><AlertCircle className="h-4 w-4 text-amber-600" /><AlertDescription className="text-amber-900">Mode front-only : le bouton est visible pour prévisualiser l’interface, mais l’exécution réelle nécessite le backend FastAPI lancé.</AlertDescription></Alert>}

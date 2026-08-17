@@ -5,7 +5,7 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 
 ## Module Alpha - Web Scraping
 - [x] Set up scraping infrastructure with requests + BeautifulSoup
-- [ ] Implement Légifrance API integration (OAuth2 token management)
+- [x] Implement Légifrance API integration (OAuth2 token management)
 - [x] Create deduplication logic (hash-based unique identifiers)
 - [x] Add retry logic with exponential backoff
 - [x] Implement rate limiting and robots.txt compliance
@@ -64,7 +64,7 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 - [x] Verify Manus OAuth integration is working
 - [x] Create admin-only routes for scraping/extraction triggers
 - [x] Implement role-based access control (admin vs public)
-- [ ] Add login/logout UI
+- [x] Add login/logout UI avec bouton visible, effacement de session et retour à l’écran de connexion
 - [x] Protect admin dashboard behind authentication
 - [x] Allow public read-only access to documents
 
@@ -119,12 +119,12 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 - [x] Ajouter la conformité robots.txt au scraper (refus par défaut et Crawl-delay testés)
 - [x] Ajouter le champ parties explicite à l’extraction IA
 - [x] Ajouter les relations étrangères documents-entités
-- [ ] Ajouter une vraie protection de route admin et l’interface connexion/déconnexion
+- [x] Ajouter une vraie protection de route admin et l’interface connexion/déconnexion avec test de nettoyage du jeton
 - [x] Ajouter un fichier d’environnement documenté utilisable sans exposer de secrets
 - [x] Ajouter un test d’intégration API du pipeline Alpha-Beta-Gamma-Delta (URL + extraction + stockage SQLite + retour dashboard)
 - [ ] Ajouter une validation de performance sur un volume représentatif
 - [ ] Ajouter des tests de composants React
-- [ ] Valider la configuration Mistral en environnement configuré
+- [x] Valider la configuration Mistral en environnement configuré
 - [ ] Vérifier le flux OAuth de bout en bout
 - [ ] Finaliser les migrations et index de production
 - [x] Mettre à jour le README principal avec les nouvelles fonctionnalités
@@ -199,4 +199,5 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 - [ ] Permettre la configuration automatique ou le mode open-admin par défaut si aucun token n’est requis pour faciliter la prise en main locale
 - [ ] Ajouter un assistant de configuration visuel dans AdminPanel pour renseigner `MISTRAL_API_KEY` et `ADMIN_API_TOKEN`
 - [x] Valider le parcours backend sans erreur 401 avec des tests mis à jour ; l’interface demande maintenant explicitement `ADMIN_API_TOKEN`
+- [x] Ajouter un bouton de déconnexion visible et vérifier le nettoyage de `ADMIN_API_TOKEN` côté navigateur
 - [x] Corriger l’intégration Mistral pour utiliser l’endpoint HTTP officiel, valider le JSON structuré et appliquer un fallback sûr
