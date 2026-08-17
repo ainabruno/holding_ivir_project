@@ -1,81 +1,33 @@
 version: '3.8'
 
 services:
-  # MySQL Database
-  mysql:
+  db:
     image: mysql:8.0
-    container_name: holding_ivir_mysql
+    container_name: holding_ivir_db
+    restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root_password
       MYSQL_DATABASE: holding_ivir
+      MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_USER: holding_user
       MYSQL_PASSWORD: holding_password
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
-    networks:
-      - holding_network
 
-  # Application Server
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     container_name: holding_ivir_app
-    environment:
-      NODE_ENV: development
-      DATABASE_URL: "mysql://holding_user:holding_password@mysql:3306/holding_ivir"
-      MISTRAL_API_KEY: ${MISTRAL_API_KEY}
-      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
-      VITE_APP_ID: ${VITE_APP_ID}
-      OAUTH_SERVER_URL: ${OAUTH_SERVER_URL:-https://api.manus.im}
-      VITE_OAUTH_PORTAL_URL: ${VITE_OAUTH_PORTAL_URL:-https://portal.manus.im}
-      OWNER_NAME: ${OWNER_NAME:-Admin}
-      OWNER_OPEN_ID: ${OWNER_OPEN_ID}
-      BUILT_IN_FORGE_API_URL: ${BUILT_IN_FORGE_API_URL:-https://api.manus.im}
-      BUILT_IN_FORGE_API_KEY: ${BUILT_IN_FORGE_API_KEY}
-      VITE_FRONTEND_FORGE_API_URL: ${VITE_FRONTEND_FORGE_API_URL:-https://api.manus.im}
-      VITE_FRONTEND_FORGE_API_KEY: ${VITE_FRONTEND_FORGE_API_KEY}
-      VITE_APP_TITLE: ${VITE_APP_TITLE:-Holding IVIR}
-      VITE_APP_LOGO: ${VITE_APP_LOGO}
+    restart: always
     ports:
       - "3000:3000"
-    depends_on:
-      mysql:
-        condition: service_healthy
-    volumes:
-      - .:/app
-      - /app/node_modules
-    networks:
-      - holding_network
-    command: pnpm dev
-
-  # Python Module Runner (for scraping and extraction)
-  python_runner:
-    build:
-      context: .
-      dockerfile: Dockerfile.python
-    container_name: holding_ivir_python
     environment:
-      MISTRAL_API_KEY: ${MISTRAL_API_KEY}
-      DATABASE_URL: "mysql://holding_user:holding_password@mysql:3306/holding_ivir"
-    volumes:
-      - ./modules:/app/modules
-      - ./output:/app/output
+      - DATABASE_URL=mysql+pymysql://holding_user:holding_password@db:3306/holding_ivir
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY:-}
+      - PORT=3000
     depends_on:
-      - mysql
-    networks:
-      - holding_network
-    command: sleep infinity
+      - db
 
 volumes:
   mysql_data:
-
-networks:
-  holding_network:
-    driver: bridge
+    driver: local

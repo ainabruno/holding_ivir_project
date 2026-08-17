@@ -1,71 +1,38 @@
-# Holding IVIR — Legal Intelligence Platform
+# Holding IVIR — Legal Intelligence Platform (100% Python FastAPI + React)
 
-Holding IVIR collecte des sources juridiques, enrichit les documents avec une extraction IA et expose les résultats dans un dashboard React connecté à une API tRPC et une base relationnelle.
+Plateforme d’intelligence juridique automatisant le scraping de sources (Wikipedia / Légifrance), l’enrichissement par IA Mistral (Pydantic, scores de confiance, classification des verdicts), le stockage relationnel et la restitution via un tableau de bord React moderne avec exports CSV/PDF natifs.
 
-## Fonctionnalités principales
+## Architecture
 
-Le projet est structuré autour de **Module Alpha** pour le scraping, **Module Beta** pour l’extraction NLP/IA, **Module Gamma** pour la persistance, **Module Delta** pour l’API typée et **Module Interface** pour le dashboard.
+- **Backend** : Python 3.12 + FastAPI (API REST, routes d’export, scraping, extraction IA)
+- **Base de données** : MySQL / SQLite via SQLAlchemy ORM
+- **Frontend** : React 19 + Tailwind 4 + shadcn/ui
+- **Modules** :
+  - **Module Alpha** : Scraping Python avec déduplication MD5 et retry exponential backoff
+  - **Module Beta** : Extraction IA Mistral avec validation Pydantic et scores de confiance
+  - **Module Gamma** : Modèles SQLAlchemy et gestion des sessions
+  - **Module Delta** : Endpoints FastAPI REST typés et documentés (`/docs`)
+  - **Module Interface** : Tableau de bord filtrable avec tri accessible et rapports CSV/PDF
 
-Le dashboard disponible sur `/dashboard` permet de rechercher et filtrer les documents par texte, source, verdict et période. Les filtres actifs sont conservés lors de l’export grâce aux deux actions suivantes :
-
-- `GET /api/legal/export.csv` génère un CSV UTF-8 avec les documents, verdicts, juridictions, montants, parties, références légales, scores de confiance et résumés.
-- `GET /api/legal/export.pdf` génère un rapport PDF A4 lisible avec les mêmes données et les filtres appliqués.
-
-Les verdicts utilisent exclusivement les valeurs `favorable`, `rejected` et `partial`.
-
-## Démarrage local
+## Lancement avec Docker (Recommandé)
 
 ```bash
-pnpm install
-pnpm check
-pnpm dev
+cp ENVIRONMENT.template .env
+# Renseignez vos clés dans .env
+docker compose up --build
 ```
 
-Après le clonage, copiez `ENVIRONMENT.template` vers `.env`, puis remplacez les placeholders. Les variables importantes sont `DATABASE_URL`, `MISTRAL_API_KEY`, `JWT_SECRET` et les variables Manus OAuth. Ne committez jamais le fichier `.env` dans le dépôt.
+L’application est accessible sur **http://localhost:3000**. Le backend FastAPI sert à la fois l’API REST et l’interface React.
 
-## Prévisualisation frontend sans clés Manus
+## Lancement en local avec Python et pnpm
 
-Pour afficher uniquement l’interface sans OAuth, MySQL, Mistral ni serveur Express, utilisez :
+```bash
+python3 -m pip install -r requirements.txt
+python3 -m uvicorn backend.main:app --reload --port 3000
+```
 
+Pour prévisualiser le frontend seul sans base de données :
 ```bash
 pnpm install --frozen-lockfile
 VITE_FRONTEND_ONLY=true pnpm dev:frontend
 ```
-
-Ouvrez `http://localhost:5173/`. La route d’accueil affiche le dashboard Holding IVIR avec un jeu de données local explicitement marqué comme prévisualisation. Les exports CSV/PDF restent disponibles uniquement lorsque l’API réelle est connectée.
-
-## Tests et build
-
-```bash
-pnpm check
-pnpm test
-pnpm build
-```
-
-Les tests couvrent l’autorisation tRPC, le format CSV, la génération PDF, l’échappement des valeurs CSV, les filtres et les noms de fichiers exportés.
-
-## Docker
-
-Le Dockerfile utilise explicitement `pnpm@10.4.1` et copie le dossier `patches/` avant l’installation, en cohérence avec le lockfile du projet. Cela rend l’installation reproductible en production :
-
-```bash
-docker build -t holding-ivir .
-docker run --env-file .env -p 3000:3000 holding-ivir
-```
-
-Pour un environnement local complet avec MySQL, utilisez `docker-compose.yml`. Les instructions complémentaires sont disponibles dans [SETUP.md](./SETUP.md) et [DEPLOYMENT.md](./DEPLOYMENT.md).
-
-## Structure utile
-
-```text
-client/src/pages/Dashboard.tsx       Dashboard, filtres et actions d’export
-server/legalExports.ts                Génération CSV/PDF et normalisation des lignes
-server/legalExportRoutes.ts           Routes HTTP de téléchargement
-server/db.ts                          Requête jointe documents-entités
-server/routers/legal.ts               Procédures tRPC et filtrage de la liste
-drizzle/schema.ts                     Schéma relationnel
-```
-
-## Limitations opérationnelles
-
-L’export renvoie un document vide mais valide lorsque la base ne contient aucun résultat. L’extraction IA nécessite une variable `MISTRAL_API_KEY` valide. Les exports sont des lectures publiques cohérentes avec l’accès public au dashboard ; les actions d’administration restent protégées par le rôle `admin`.

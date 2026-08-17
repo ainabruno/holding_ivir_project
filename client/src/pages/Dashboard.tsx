@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { trpc } from "@/lib/trpc";
+import { useEffect, useMemo, useState } from "react";
+import { pythonApi } from "@/lib/pythonApiClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,15 +73,33 @@ export default function Dashboard() {
   }), [endDate, search, source, startDate, verdict]);
 
   const queryInput = useMemo(() => ({ limit: PAGE_SIZE, offset, ...filters }), [filters, offset]);
-  const { data: documentsData, isLoading: apiDocsLoading } = trpc.legal.listDocuments.useQuery(queryInput, { enabled: !frontendOnly });
-  const { data: stats } = trpc.legal.getStatistics.useQuery(undefined, { enabled: !frontendOnly });
+  const [apiDocumentsData, setApiDocumentsData] = useState<{ documents: any[]; count: number } | null>(null);
+  const [apiStats, setApiStats] = useState<any | null>(null);
+  const [apiDocsLoading, setApiDocsLoading] = useState(!frontendOnly);
+
+  // Fetch from FastAPI Python backend when not in frontend-only mode
+  useEffect(() => {
+    if (frontendOnly) return;
+    setApiDocsLoading(true);
+    Promise.all([
+      pythonApi.listDocuments(queryInput),
+      pythonApi.getStatistics()
+    ]).then(([docsRes, statsRes]) => {
+      setApiDocumentsData(docsRes);
+      setApiStats(statsRes);
+      setApiDocsLoading(false);
+    }).catch((err) => {
+      console.error("[Python API Error]", err);
+      setApiDocsLoading(false);
+    });
+  }, [frontendOnly, queryInput]);
 
   const previewDocumentsData = useMemo(() => frontendOnly
     ? getFrontendPreviewDocuments(queryInput)
     : undefined, [queryInput]);
   const previewStats = useMemo(() => frontendOnly ? getFrontendPreviewStatistics() : undefined, []);
-  const visibleDocumentsData = frontendOnly ? previewDocumentsData : documentsData;
-  const visibleStats = frontendOnly ? previewStats : stats;
+  const visibleDocumentsData = frontendOnly ? previewDocumentsData : apiDocumentsData;
+  const visibleStats = frontendOnly ? previewStats : apiStats;
   const docsLoading = frontendOnly ? false : apiDocsLoading;
   const sortedDocuments = useMemo(
     () => visibleDocumentsData ? sortLegalDocuments(visibleDocumentsData.documents as SortableDocument[], sortKey, sortDirection) : [],
@@ -101,7 +119,7 @@ export default function Dashboard() {
   const exportUrl = (extension: "csv" | "pdf") => `/api/legal/export.${extension}${exportQuery ? `?${exportQuery}` : ""}`;
   const totalDocuments = Number(visibleStats?.totalDocuments ?? 0);
   const averageConfidence = Number(visibleStats?.averageConfidence ?? 0);
-  const verdictCount = (value: Verdict) => Number(visibleStats?.verdictDistribution?.find((item) => item.verdict === value)?.count ?? 0);
+  const verdictCount = (value: Verdict) => Number(visibleStats?.verdictDistribution?.find((item: any) => item.verdict === value)?.count ?? 0);
 
   const resetFilters = () => {
     setSearch("");
@@ -121,7 +139,7 @@ export default function Dashboard() {
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-teal-700">Module Interface</p>
             <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Legal intelligence dashboard</h1>
-            <p className="mt-2 max-w-2xl text-sm text-slate-600">Recherchez, filtrez et exportez les données juridiques enrichies par l’IA.</p>
+            <p className="mt-2 max-w-2xl text-sm text-slate-600">Recherchez, filtrez et exportez les données juridiques enrichies par l’IA (Backend Python FastAPI).</p>
           </div>
           <div className="flex flex-wrap gap-2" aria-label="Exports">
             {frontendOnly ? (
@@ -184,7 +202,7 @@ export default function Dashboard() {
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2"><SlidersHorizontal className="h-4 w-4 text-teal-700" />Recherche et filtres</CardTitle>
-                <CardDescription className="mt-1">Les mêmes filtres sont appliqués aux exports CSV et PDF lorsque l’API est connectée.</CardDescription>
+                <CardDescription className="mt-1">Les mêmes filtres sont appliqués aux exports CSV et PDF lorsque l’API Python est connectée.</CardDescription>
               </div>
               <Button variant="ghost" size="sm" onClick={resetFilters} className="self-start text-slate-600 lg:self-auto">Réinitialiser</Button>
             </div>
@@ -200,7 +218,7 @@ export default function Dashboard() {
         <Card className="border-0 bg-white shadow-sm ring-1 ring-slate-200/70">
           <CardHeader className="border-b border-slate-100 pb-4"><div className="flex items-center justify-between gap-3"><div><CardTitle>Données juridiques extraites</CardTitle><CardDescription className="mt-1">{visibleDocumentsData?.count ?? 0} résultat(s) correspondant aux filtres.</CardDescription></div><Download className="h-5 w-5 text-slate-400" /></div></CardHeader>
           <CardContent className="p-0">
-            {docsLoading ? <div className="flex h-48 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-teal-700" /></div> : visibleDocumentsData?.documents?.length ? <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead><SortButton label="Source" sortKey="source" sortKeyState={sortKey} direction={sortDirection} onSort={(key, direction) => { setSortKey(key); setSortDirection(direction); }} /></TableHead><TableHead>Document</TableHead><TableHead>Juridiction</TableHead><TableHead><SortButton label="Verdict" sortKey="verdict" sortKeyState={sortKey} direction={sortDirection} onSort={(key, direction) => { setSortKey(key); setSortDirection(direction); }} /></TableHead><TableHead><SortButton label="Date" sortKey="date" sortKeyState={sortKey} direction={sortDirection} onSort={(key, direction) => { setSortKey(key); setSortDirection(direction); }} /></TableHead><TableHead><SortButton label="Confiance" sortKey="confidence" sortKeyState={sortKey} direction={sortDirection} onSort={(key, direction) => { setSortKey(key); setSortDirection(direction); }} /></TableHead></TableRow></TableHeader><TableBody>{sortedDocuments.map((doc) => { const entity = doc.extractedEntity; return <TableRow key={`${doc.id}-${entity?.sourceId ?? "document"}`}><TableCell><Badge variant="outline">{doc.source}</Badge></TableCell><TableCell className="min-w-[220px] max-w-sm"><div className="truncate font-medium">{doc.typeDocument || "Document juridique"}</div><div className="truncate text-xs text-slate-500">{doc.idSource}</div></TableCell><TableCell>{entity?.juridiction || doc.juridiction || "—"}</TableCell><TableCell><Badge variant="outline" className={verdictClass(entity?.verdict)}>{entity?.verdict || "Non classé"}</Badge></TableCell><TableCell className="whitespace-nowrap">{dateLabel(doc.dateDecision || doc.dateCollecte)}</TableCell><TableCell>{entity?.niveauConfiance == null ? "—" : `${entity.niveauConfiance}%`}</TableCell></TableRow>; })}</TableBody></Table></div> : <div className="px-6 py-14 text-center text-sm text-slate-500">Aucun document ne correspond aux filtres.</div>}
+            {docsLoading ? <div className="flex h-48 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-teal-700" /></div> : visibleDocumentsData?.documents?.length ? <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead><SortButton label="Source" sortKey="source" sortKeyState={sortKey} direction={sortDirection} onSort={(key, direction) => { setSortKey(key); setSortDirection(direction); }} /></TableHead><TableHead>Document</TableHead><TableHead>Juridiction</TableHead><TableHead><SortButton label="Verdict" sortKey="verdict" sortKeyState={sortKey} direction={sortDirection} onSort={(key, direction) => { setSortKey(key); setSortDirection(direction); }} /></TableHead><TableHead><SortButton label="Date" sortKey="date" sortKeyState={sortKey} direction={sortDirection} onSort={(key, direction) => { setSortKey(key); setSortDirection(direction); }} /></TableHead><TableHead><SortButton label="Confiance" sortKey="confidence" sortKeyState={sortKey} direction={sortDirection} onSort={(key, direction) => { setSortKey(key); setSortDirection(direction); }} /></TableHead></TableRow></TableHeader><TableBody>{sortedDocuments.map((doc: any) => { const entity = doc.extractedEntity; return <TableRow key={`${doc.id}-${entity?.sourceId ?? "document"}`}><TableCell><Badge variant="outline">{doc.source}</Badge></TableCell><TableCell className="min-w-[220px] max-w-sm"><div className="truncate font-medium">{doc.typeDocument || "Document juridique"}</div><div className="truncate text-xs text-slate-500">{doc.idSource}</div></TableCell><TableCell>{entity?.juridiction || doc.juridiction || "—"}</TableCell><TableCell><Badge variant="outline" className={verdictClass(entity?.verdict)}>{entity?.verdict || "Non classé"}</Badge></TableCell><TableCell className="whitespace-nowrap">{dateLabel(doc.dateDecision || doc.dateCollecte)}</TableCell><TableCell>{entity?.niveauConfiance == null ? "—" : `${entity.niveauConfiance}%`}</TableCell></TableRow>; })}</TableBody></Table></div> : <div className="px-6 py-14 text-center text-sm text-slate-500">Aucun document ne correspond aux filtres.</div>}
             <div className="flex flex-col gap-3 border-t border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between"><span className="text-xs text-slate-500">Page {Math.floor(offset / PAGE_SIZE) + 1}</span><div className="flex gap-2"><Button onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))} disabled={offset === 0} variant="outline" size="sm">Précédent</Button><Button onClick={() => setOffset(offset + PAGE_SIZE)} disabled={!visibleDocumentsData || offset + PAGE_SIZE >= visibleDocumentsData.count} variant="outline" size="sm">Suivant</Button></div></div>
           </CardContent>
         </Card>

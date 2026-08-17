@@ -159,3 +159,11 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 - [x] Ajouter des tests pour le mode front-only et la route d’accueil (preview helpers et contrat de route)
 - [x] Vérifier la prévisualisation desktop et mobile sans secrets
 - [x] Créer un checkpoint après validation du front-only et du runtime
+
+- [x] Remplacer le backend Node/tRPC par une API FastAPI Python complète
+- [x] Implémenter les modules Python Alpha (scraping) et Beta (extraction Mistral/Pydantic)
+- [x] Implémenter le module Gamma (base SQLAlchemy / SQLite ou MySQL) et Delta (routes FastAPI)
+- [x] Reconnecter le frontend React aux endpoints FastAPI et conserver le mode front-only
+- [x] Implémenter les exports CSV/PDF natifs en Python
+- [x] Mettre à jour Dockerfile, docker-compose.yml et les guides pour une stack 100% Python
+- [x] Vérifier les tests Python, le build frontend et livrer le checkpoint Python
