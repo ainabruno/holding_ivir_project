@@ -15,3 +15,8 @@ describe("AdminPanel pipeline contract", () => {
     expect(pipelineStatusMessage("error", "URL invalide")).toBe("Erreur : URL invalide");
   });
 });
+
+  it("handles custom warning messages propagated from the backend", () => {
+    const warningMsg = "Avertissement : robots.txt interdit l'accès à ce chemin.";
+    expect(pipelineStatusMessage("error", warningMsg)).toBe(`Erreur : ${warningMsg}`);
+  });

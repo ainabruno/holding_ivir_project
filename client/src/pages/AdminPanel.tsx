@@ -86,7 +86,7 @@ export default function AdminPanel() {
     try {
       const result = await pythonApi.triggerScraping(selectedSource, normalizedUrl);
       setRunResult(result);
-      setJobStatus(result.success ? pipelineStatusMessage("success") : pipelineStatusMessage("error", "Le traitement s’est terminé avec un avertissement."));
+      setJobStatus(result.success ? pipelineStatusMessage("success") : pipelineStatusMessage("error", result.message || "Le traitement s’est terminé avec un avertissement."));
     } catch (error: any) {
       const statusCode = error?.response?.status;
       if (statusCode === 401 || statusCode === 403) {

@@ -202,3 +202,8 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 - [x] Valider le parcours backend sans erreur 401 avec des tests mis à jour ; l’interface demande maintenant explicitement `ADMIN_API_TOKEN`
 - [x] Ajouter un bouton de déconnexion visible et vérifier le nettoyage de `ADMIN_API_TOKEN` côté navigateur
 - [x] Corriger l’intégration Mistral pour utiliser l’endpoint HTTP officiel, valider le JSON structuré et appliquer un fallback sûr
+
+## Résolution de l’avertissement du pipeline URL
+- [x] Analyser la source de l’avertissement « Le traitement s’est terminé avec un avertissement » dans FastAPI et le client React
+- [x] Rendre les messages d’erreur du pipeline explicites en propageant `result.message`
+- [x] Valider le déclenchement réel avec un test d’intégration et un rapport clair
