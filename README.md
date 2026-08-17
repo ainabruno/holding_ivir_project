@@ -23,6 +23,17 @@ pnpm dev
 
 Après le clonage, copiez `ENVIRONMENT.template` vers `.env`, puis remplacez les placeholders. Les variables importantes sont `DATABASE_URL`, `MISTRAL_API_KEY`, `JWT_SECRET` et les variables Manus OAuth. Ne committez jamais le fichier `.env` dans le dépôt.
 
+## Prévisualisation frontend sans clés Manus
+
+Pour afficher uniquement l’interface sans OAuth, MySQL, Mistral ni serveur Express, utilisez :
+
+```bash
+pnpm install --frozen-lockfile
+VITE_FRONTEND_ONLY=true pnpm dev:frontend
+```
+
+Ouvrez `http://localhost:5173/`. La route d’accueil affiche le dashboard Holding IVIR avec un jeu de données local explicitement marqué comme prévisualisation. Les exports CSV/PDF restent disponibles uniquement lorsque l’API réelle est connectée.
+
 ## Tests et build
 
 ```bash

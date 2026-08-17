@@ -7,7 +7,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
-import { serveStatic, setupVite } from "./vite";
+import { serveStatic } from "./static";
 import { registerLegalExportRoutes } from "../legalExportRoutes";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -48,6 +48,9 @@ async function startServer() {
   );
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
+    // Keep the development-only Vite module out of the production bundle.
+    const loadModule = new Function("specifier", "return import(specifier)") as (specifier: string) => Promise<typeof import("./vite")>;
+    const { setupVite } = await loadModule("./vite");
     await setupVite(app, server);
   } else {
     serveStatic(app);

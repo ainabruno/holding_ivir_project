@@ -48,7 +48,18 @@ VITE_FRONTEND_FORGE_API_KEY=your_frontend_forge_key
 
 Les variables Manus déjà configurées par votre hébergeur doivent être conservées lorsqu’elles sont disponibles. Ne committez jamais `.env`.
 
-## 4. Lancement local avec pnpm
+## 4. Prévisualiser uniquement le frontend sans clés Manus
+
+Pour voir l’interface sans OAuth, base de données, clé Mistral ni serveur Express, utilisez le serveur Vite seul et activez le mode `VITE_FRONTEND_ONLY`. Il affiche le dashboard directement sur `/` avec des données synthétiques clairement marquées comme prévisualisation. Ces données ne sont ni envoyées à l’API ni utilisées en production.
+
+```bash
+pnpm install --frozen-lockfile
+VITE_FRONTEND_ONLY=true pnpm dev:frontend
+```
+
+Ouvrez ensuite `http://localhost:5173/`. Les boutons CSV/PDF sont désactivés dans ce mode, car ils nécessitent l’API réelle. La page `/dashboard` affiche la même prévisualisation.
+
+## 5. Lancement local complet avec pnpm
 
 Cette méthode nécessite MySQL accessible et une base `holding_ivir` configurée dans `DATABASE_URL`.
 
@@ -72,7 +83,7 @@ http://localhost:3000/admin
 
 Le dashboard est accessible en lecture. Les actions de scraping et d’extraction restent réservées aux administrateurs authentifiés.
 
-## 5. Lancement recommandé avec Docker Compose
+## 6. Lancement recommandé avec Docker Compose
 
 ```bash
 cp ENVIRONMENT.template .env
@@ -100,7 +111,7 @@ Initialisez les migrations après le démarrage :
 docker compose exec app pnpm drizzle-kit migrate
 ```
 
-## 6. Construire et lancer l’image de production
+## 7. Construire et lancer l’image de production
 
 ```bash
 docker build -t holding-ivir:latest .
@@ -109,7 +120,7 @@ docker run --rm --env-file .env -p 3000:3000 holding-ivir:latest
 
 Le Dockerfile copie `patches/` avant `pnpm install`. Cette étape est obligatoire car `package.json` et `pnpm-lock.yaml` utilisent le patch `wouter@3.7.1`.
 
-## 7. Déployer sur un hébergeur Docker
+## 8. Déployer sur un hébergeur Docker
 
 Construisez puis poussez l’image vers votre registre :
 
@@ -133,7 +144,7 @@ VITE_OAUTH_PORTAL_URL=https://portal.manus.im
 
 Le service doit exposer le port `3000`. La base MySQL doit être accessible depuis le conteneur et les migrations doivent être appliquées avant le premier usage.
 
-## 8. Diagnostic du précédent échec Docker
+## 9. Diagnostic du précédent échec Docker
 
 L’erreur précédente était :
 
@@ -156,7 +167,7 @@ git pull origin main
 docker build --no-cache -t holding-ivir:latest .
 ```
 
-## 9. Vérifications après déploiement
+## 10. Vérifications après déploiement
 
 ```bash
 curl -I https://VOTRE_DOMAINE/dashboard

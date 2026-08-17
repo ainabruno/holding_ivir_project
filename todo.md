@@ -146,8 +146,16 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 
 - [x] Auditer les fichiers réellement présents dans le dépôt GitHub et le contexte Docker
 - [x] Corriger l’absence du patch wouter@3.7.1.patch dans le build Docker
-- [x] Vérifier les instructions de lancement depuis un clone GitHub propre
+- [x] Vérifier les instructions de lancement depuis un clone GitHub propre (clone neuf validé : install, check, test, build)
 - [x] Documenter le lancement local avec pnpm et Docker Compose
 - [x] Documenter les variables d’environnement nécessaires au déploiement
 - [x] Documenter la procédure de déploiement et le diagnostic des erreurs Docker
 - [x] Créer un checkpoint après validation du correctif de déploiement
+
+- [x] Ajouter un mode de prévisualisation front-only sans clés Manus
+- [x] Afficher le dashboard Holding IVIR sur la route `/` au lieu de la page template
+- [x] Ajouter des données de prévisualisation clairement identifiées sans les mélanger aux données de production
+- [x] Corriger le runtime Docker qui ne trouve pas le package `vite` après `pnpm install --prod`
+- [x] Ajouter des tests pour le mode front-only et la route d’accueil (preview helpers et contrat de route)
+- [x] Vérifier la prévisualisation desktop et mobile sans secrets
+- [x] Créer un checkpoint après validation du front-only et du runtime

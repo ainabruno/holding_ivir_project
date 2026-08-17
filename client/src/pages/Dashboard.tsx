@@ -7,10 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Download, FileSpreadsheet, FileText, Loader2, Search, SlidersHorizontal } from "lucide-react";
+import {
+  getFrontendPreviewDocuments,
+  getFrontendPreviewStatistics,
+} from "@/lib/frontendPreview";
 
 const PAGE_SIZE = 25;
-
 type Verdict = "favorable" | "rejected" | "partial";
+const frontendOnly = import.meta.env.VITE_FRONTEND_ONLY === "true";
 
 function dateLabel(value: Date | string | null | undefined) {
   if (!value) return "—";
@@ -42,8 +46,16 @@ export default function Dashboard() {
   }), [endDate, search, source, startDate, verdict]);
 
   const queryInput = useMemo(() => ({ limit: PAGE_SIZE, offset, ...filters }), [filters, offset]);
-  const { data: documentsData, isLoading: docsLoading } = trpc.legal.listDocuments.useQuery(queryInput);
-  const { data: stats } = trpc.legal.getStatistics.useQuery();
+  const { data: documentsData, isLoading: apiDocsLoading } = trpc.legal.listDocuments.useQuery(queryInput, { enabled: !frontendOnly });
+  const { data: stats } = trpc.legal.getStatistics.useQuery(undefined, { enabled: !frontendOnly });
+
+  const previewDocumentsData = useMemo(() => frontendOnly
+    ? getFrontendPreviewDocuments(queryInput)
+    : undefined, [queryInput]);
+  const previewStats = useMemo(() => frontendOnly ? getFrontendPreviewStatistics() : undefined, []);
+  const visibleDocumentsData = frontendOnly ? previewDocumentsData : documentsData;
+  const visibleStats = frontendOnly ? previewStats : stats;
+  const docsLoading = frontendOnly ? false : apiDocsLoading;
 
   const exportQuery = useMemo(() => {
     const params = new URLSearchParams();
@@ -56,9 +68,9 @@ export default function Dashboard() {
   }, [filters]);
 
   const exportUrl = (extension: "csv" | "pdf") => `/api/legal/export.${extension}${exportQuery ? `?${exportQuery}` : ""}`;
-  const totalDocuments = Number(stats?.totalDocuments ?? 0);
-  const averageConfidence = Number(stats?.averageConfidence ?? 0);
-  const verdictCount = (value: Verdict) => Number(stats?.verdictDistribution?.find((item) => item.verdict === value)?.count ?? 0);
+  const totalDocuments = Number(visibleStats?.totalDocuments ?? 0);
+  const averageConfidence = Number(visibleStats?.averageConfidence ?? 0);
+  const verdictCount = (value: Verdict) => Number(visibleStats?.verdictDistribution?.find((item) => item.verdict === value)?.count ?? 0);
 
   const resetFilters = () => {
     setSearch("");
@@ -79,25 +91,46 @@ export default function Dashboard() {
             <p className="mt-2 max-w-2xl text-sm text-slate-600">Recherchez, filtrez et exportez les données juridiques enrichies par l’IA.</p>
           </div>
           <div className="flex flex-wrap gap-2" aria-label="Exports">
-            <Button asChild variant="outline" className="border-slate-300 bg-white">
-              <a href={exportUrl("csv")} download>
-                <FileSpreadsheet className="mr-2 h-4 w-4 text-emerald-700" />
-                Export CSV
-              </a>
-            </Button>
-            <Button asChild className="bg-slate-900 text-white hover:bg-slate-800">
-              <a href={exportUrl("pdf")} download>
-                <FileText className="mr-2 h-4 w-4" />
-                Export PDF
-              </a>
-            </Button>
+            {frontendOnly ? (
+              <>
+                <Button disabled variant="outline" className="border-slate-300 bg-white" title="Disponible lorsque l’API est connectée">
+                  <FileSpreadsheet className="mr-2 h-4 w-4 text-emerald-700" />
+                  Export CSV
+                </Button>
+                <Button disabled className="bg-slate-900 text-white" title="Disponible lorsque l’API est connectée">
+                  <FileText className="mr-2 h-4 w-4" />
+                  Export PDF
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button asChild variant="outline" className="border-slate-300 bg-white">
+                  <a href={exportUrl("csv")} download>
+                    <FileSpreadsheet className="mr-2 h-4 w-4 text-emerald-700" />
+                    Export CSV
+                  </a>
+                </Button>
+                <Button asChild className="bg-slate-900 text-white hover:bg-slate-800">
+                  <a href={exportUrl("pdf")} download>
+                    <FileText className="mr-2 h-4 w-4" />
+                    Export PDF
+                  </a>
+                </Button>
+              </>
+            )}
           </div>
         </header>
+
+        {frontendOnly && (
+          <div role="status" className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
+            <strong>Prévisualisation front-only.</strong> Les données affichées sont synthétiques et locales à cette démonstration. Aucune clé Manus, base de données ou extraction IA n’est utilisée.
+          </div>
+        )}
 
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Indicateurs clés">
           <Card className="border-0 bg-white shadow-sm ring-1 ring-slate-200/70">
             <CardHeader className="pb-2"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-slate-500">Documents</CardTitle></CardHeader>
-            <CardContent><div className="text-3xl font-semibold">{totalDocuments}</div><p className="mt-1 text-xs text-slate-500">Corpus collecté</p></CardContent>
+            <CardContent><div className="text-3xl font-semibold">{totalDocuments}</div><p className="mt-1 text-xs text-slate-500">{frontendOnly ? "Corpus de prévisualisation" : "Corpus collecté"}</p></CardContent>
           </Card>
           <Card className="border-0 bg-white shadow-sm ring-1 ring-slate-200/70">
             <CardHeader className="pb-2"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-slate-500">Favorable</CardTitle></CardHeader>
@@ -118,7 +151,7 @@ export default function Dashboard() {
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2"><SlidersHorizontal className="h-4 w-4 text-teal-700" />Recherche et filtres</CardTitle>
-                <CardDescription className="mt-1">Les mêmes filtres sont appliqués aux exports CSV et PDF.</CardDescription>
+                <CardDescription className="mt-1">Les mêmes filtres sont appliqués aux exports CSV et PDF lorsque l’API est connectée.</CardDescription>
               </div>
               <Button variant="ghost" size="sm" onClick={resetFilters} className="self-start text-slate-600 lg:self-auto">Réinitialiser</Button>
             </div>
@@ -132,10 +165,10 @@ export default function Dashboard() {
         </Card>
 
         <Card className="border-0 bg-white shadow-sm ring-1 ring-slate-200/70">
-          <CardHeader className="border-b border-slate-100 pb-4"><div className="flex items-center justify-between gap-3"><div><CardTitle>Données juridiques extraites</CardTitle><CardDescription className="mt-1">{documentsData?.count ?? 0} résultat(s) correspondant aux filtres.</CardDescription></div><Download className="h-5 w-5 text-slate-400" /></div></CardHeader>
+          <CardHeader className="border-b border-slate-100 pb-4"><div className="flex items-center justify-between gap-3"><div><CardTitle>Données juridiques extraites</CardTitle><CardDescription className="mt-1">{visibleDocumentsData?.count ?? 0} résultat(s) correspondant aux filtres.</CardDescription></div><Download className="h-5 w-5 text-slate-400" /></div></CardHeader>
           <CardContent className="p-0">
-            {docsLoading ? <div className="flex h-48 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-teal-700" /></div> : documentsData?.documents?.length ? <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Source</TableHead><TableHead>Document</TableHead><TableHead>Juridiction</TableHead><TableHead>Verdict</TableHead><TableHead>Date</TableHead><TableHead>Confiance</TableHead></TableRow></TableHeader><TableBody>{documentsData.documents.map((doc) => { const entity = doc.extractedEntity; return <TableRow key={`${doc.id}-${entity?.sourceId ?? "document"}`}><TableCell><Badge variant="outline">{doc.source}</Badge></TableCell><TableCell className="min-w-[220px] max-w-sm"><div className="truncate font-medium">{doc.typeDocument || "Document juridique"}</div><div className="truncate text-xs text-slate-500">{doc.idSource}</div></TableCell><TableCell>{entity?.juridiction || doc.juridiction || "—"}</TableCell><TableCell><Badge variant="outline" className={verdictClass(entity?.verdict)}>{entity?.verdict || "Non classé"}</Badge></TableCell><TableCell className="whitespace-nowrap">{dateLabel(doc.dateDecision || doc.dateCollecte)}</TableCell><TableCell>{entity?.niveauConfiance == null ? "—" : `${entity.niveauConfiance}%`}</TableCell></TableRow>; })}</TableBody></Table></div> : <div className="px-6 py-14 text-center text-sm text-slate-500">Aucun document ne correspond aux filtres.</div>}
-            <div className="flex flex-col gap-3 border-t border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between"><span className="text-xs text-slate-500">Page {Math.floor(offset / PAGE_SIZE) + 1}</span><div className="flex gap-2"><Button onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))} disabled={offset === 0} variant="outline" size="sm">Précédent</Button><Button onClick={() => setOffset(offset + PAGE_SIZE)} disabled={!documentsData || offset + PAGE_SIZE >= documentsData.count} variant="outline" size="sm">Suivant</Button></div></div>
+            {docsLoading ? <div className="flex h-48 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-teal-700" /></div> : visibleDocumentsData?.documents?.length ? <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Source</TableHead><TableHead>Document</TableHead><TableHead>Juridiction</TableHead><TableHead>Verdict</TableHead><TableHead>Date</TableHead><TableHead>Confiance</TableHead></TableRow></TableHeader><TableBody>{visibleDocumentsData.documents.map((doc) => { const entity = doc.extractedEntity; return <TableRow key={`${doc.id}-${entity?.sourceId ?? "document"}`}><TableCell><Badge variant="outline">{doc.source}</Badge></TableCell><TableCell className="min-w-[220px] max-w-sm"><div className="truncate font-medium">{doc.typeDocument || "Document juridique"}</div><div className="truncate text-xs text-slate-500">{doc.idSource}</div></TableCell><TableCell>{entity?.juridiction || doc.juridiction || "—"}</TableCell><TableCell><Badge variant="outline" className={verdictClass(entity?.verdict)}>{entity?.verdict || "Non classé"}</Badge></TableCell><TableCell className="whitespace-nowrap">{dateLabel(doc.dateDecision || doc.dateCollecte)}</TableCell><TableCell>{entity?.niveauConfiance == null ? "—" : `${entity.niveauConfiance}%`}</TableCell></TableRow>; })}</TableBody></Table></div> : <div className="px-6 py-14 text-center text-sm text-slate-500">Aucun document ne correspond aux filtres.</div>}
+            <div className="flex flex-col gap-3 border-t border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between"><span className="text-xs text-slate-500">Page {Math.floor(offset / PAGE_SIZE) + 1}</span><div className="flex gap-2"><Button onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))} disabled={offset === 0} variant="outline" size="sm">Précédent</Button><Button onClick={() => setOffset(offset + PAGE_SIZE)} disabled={!visibleDocumentsData || offset + PAGE_SIZE >= visibleDocumentsData.count} variant="outline" size="sm">Suivant</Button></div></div>
           </CardContent>
         </Card>
       </div>
