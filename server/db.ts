@@ -1,4 +1,4 @@
-import { eq, desc, gte, lte, and, or, like, count, avg } from "drizzle-orm";
+import { eq, desc, gte, lte, and, count, avg } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, LegalDocument, InsertLegalDocument, LegalEntity, InsertLegalEntity, legalDocuments, legalEntities } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -222,49 +222,4 @@ export async function getStatistics() {
     topJurisdictions,
     averageConfidence: avgConfidence[0]?.avg || 0,
   };
-}
-
-
-export async function getLegalExportRows(filters: {
-  search?: string;
-  source?: string;
-  verdict?: string;
-  startDate?: Date;
-  endDate?: Date;
-}) {
-  const db = await getDb();
-  if (!db) return [];
-
-  const conditions: any[] = [];
-  if (filters.source) conditions.push(eq(legalDocuments.source, filters.source));
-  if (filters.startDate) conditions.push(gte(legalDocuments.dateCollecte, filters.startDate));
-  if (filters.endDate) conditions.push(lte(legalDocuments.dateCollecte, filters.endDate));
-  if (filters.verdict) conditions.push(eq(legalEntities.sensVerdict, filters.verdict));
-  if (filters.search) {
-    const pattern = `%${filters.search}%`;
-    conditions.push(
-      or(
-        like(legalDocuments.idSource, pattern),
-        like(legalDocuments.source, pattern),
-        like(legalDocuments.urlSource, pattern),
-        like(legalDocuments.juridiction, pattern),
-        like(legalDocuments.typeDocument, pattern),
-        like(legalDocuments.texteBrut, pattern),
-        like(legalEntities.juridiction, pattern),
-        like(legalEntities.intervenants, pattern),
-        like(legalEntities.referencesLegales, pattern),
-        like(legalEntities.resumeAutomatique, pattern),
-      )
-    );
-  }
-
-  return await db
-    .select({
-      document: legalDocuments,
-      entity: legalEntities,
-    })
-    .from(legalDocuments)
-    .leftJoin(legalEntities, eq(legalDocuments.idSource, legalEntities.sourceId))
-    .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(desc(legalDocuments.dateCollecte));
 }

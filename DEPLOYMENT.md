@@ -23,10 +23,10 @@ cd holding_ivir_project
 ### 2. Configure Environment Variables
 
 ```bash
-cp ENVIRONMENT.template .env
+cp .env.example .env
 ```
 
-Edit `.env` with your configuration. The repository includes `ENVIRONMENT.template`; replace every placeholder and do not commit `.env`:
+Edit `.env` with your configuration:
 
 ```env
 # Database
@@ -129,7 +129,7 @@ git clone <repository-url>
 cd holding_ivir_project
 
 # Configure environment
-cp ENVIRONMENT.template .env
+cp .env.example .env
 nano .env
 
 # Start services

@@ -71,8 +71,8 @@ pip install -r modules/requirements.txt
 ### Step 2: Configure Environment
 
 ```bash
-# Create .env from the repository template with your configuration
-cp ENVIRONMENT.template .env
+# Create .env file with your configuration
+cp .env.example .env
 
 # Edit .env with your actual values
 nano .env
@@ -102,7 +102,7 @@ The application will be available at `http://localhost:3000`
 ### Step 1: Configure Environment
 
 ```bash
-cp ENVIRONMENT.template .env
+cp .env.example .env
 nano .env
 ```
 

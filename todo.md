@@ -5,7 +5,7 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 
 ## Module Alpha - Web Scraping
 - [x] Set up scraping infrastructure with requests + BeautifulSoup
-- [x] Implement Légifrance API integration (OAuth2 token management)
+- [ ] Implement Légifrance API integration (OAuth2 token management)
 - [x] Create deduplication logic (hash-based unique identifiers)
 - [x] Add retry logic with exponential backoff
 - [x] Implement rate limiting and robots.txt compliance
@@ -48,11 +48,11 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 ## Module Interface - React Dashboard
 - [x] Create dashboard layout with navigation
 - [x] Build documents table with sorting and pagination
-- [x] Add search functionality for documents
-- [x] Create filter panel (date, source, verdict)
+- [ ] Add search functionality for documents
+- [ ] Create filter panel (date, source, verdict)
 - [ ] Build entity detail view per document
-- [x] Create admin control panel for triggering jobs
-- [x] Add job status/progress indicators
+- [ ] Create admin control panel for triggering jobs
+- [ ] Add job status/progress indicators
 - [x] Implement statistics dashboard with charts
 - [ ] Add verdict distribution chart (pie/bar)
 - [ ] Add documents over time chart (line)
@@ -64,7 +64,7 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 - [x] Verify Manus OAuth integration is working
 - [x] Create admin-only routes for scraping/extraction triggers
 - [x] Implement role-based access control (admin vs public)
-- [x] Add login/logout UI avec bouton visible, effacement de session et retour à l’écran de connexion
+- [ ] Add login/logout UI
 - [x] Protect admin dashboard behind authentication
 - [x] Allow public read-only access to documents
 
@@ -105,110 +105,8 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 - [x] Documentation - Complete with README, SETUP, and DEPLOYMENT guides
 - [x] Test Suite - Complete with unit and integration tests
 
-- [x] Ajouter l’export des données juridiques extraites au format CSV depuis le tableau de bord
-- [x] Ajouter l’export des données juridiques extraites au format PDF depuis le tableau de bord
-- [x] Respecter les filtres actifs et les permissions publiques/admin lors des exports
-- [x] Ajouter les tests des exports CSV/PDF et de l’accès public aux routes
-- [x] Corriger le build Docker bloqué par la vérification de pnpm-lock.yaml
-- [x] Vérifier le rendu du dashboard et exécuter les tests finaux
-- [x] Créer un checkpoint après validation de la fonctionnalité d’export
-- [ ] Corriger les éléments en attente signalés par l’audit précédent du projet (hors périmètre du lancement URL)
-- [x] Ajouter les contrôles de recherche, tri et filtres complets au dashboard
-- [ ] Restaurer les graphiques KPI du dashboard
-- [x] Implémenter l’exécution réelle des jobs de scraping et d’extraction
-- [x] Ajouter la conformité robots.txt au scraper (refus par défaut et Crawl-delay testés)
-- [x] Ajouter le champ parties explicite à l’extraction IA
-- [x] Ajouter les relations étrangères documents-entités
-- [x] Ajouter une vraie protection de route admin et l’interface connexion/déconnexion avec test de nettoyage du jeton
-- [x] Ajouter un fichier d’environnement documenté utilisable sans exposer de secrets
-- [x] Ajouter un test d’intégration API du pipeline Alpha-Beta-Gamma-Delta (URL + extraction + stockage SQLite + retour dashboard)
-- [ ] Ajouter une validation de performance sur un volume représentatif
-- [ ] Ajouter des tests de composants React
-- [x] Valider la configuration Mistral en environnement configuré
-- [ ] Vérifier le flux OAuth de bout en bout
-- [ ] Finaliser les migrations et index de production
-- [x] Mettre à jour le README principal avec les nouvelles fonctionnalités
-- [ ] Vérifier les scripts Docker local et production (Docker indisponible dans le sandbox)
-- [x] Corriger la page d’accueil de démonstration et relier le dashboard
-- [x] Vérifier le build TypeScript et le build frontend avant livraison
-- [x] Vérifier les journaux applicatifs et réseau après intégration
-- [x] Préparer les notes de livraison et le lien du checkpoint final
-- [x] Vérifier les contraintes de confidentialité et d’absence de données fictives
-- [ ] Vérifier la compatibilité avec le mode Autoscale
-- [x] Documenter les limitations lorsque MISTRAL_API_KEY n’est pas configurée
-- [x] Documenter la procédure de déploiement après correction Docker
-- [ ] Vérifier l’accessibilité clavier des contrôles d’export (à valider dans le navigateur)
-- [x] Vérifier la responsive design du dashboard et de la zone d’export
-- [x] Nettoyer les tests obsolètes ou non exécutables
-- [x] Générer un rapport final des fichiers modifiés et tests passés
-- [x] Confirmer la disponibilité du projet dans le gestionnaire de versions
-- [x] Livrer le projet final à l’utilisateur avec le checkpoint
-
-- [x] Auditer les fichiers réellement présents dans le dépôt GitHub et le contexte Docker
-- [x] Corriger l’absence du patch wouter@3.7.1.patch dans le build Docker
-- [x] Vérifier les instructions de lancement depuis un clone GitHub propre (clone neuf validé : install, check, test, build)
-- [x] Documenter le lancement local avec pnpm et Docker Compose
-- [x] Documenter les variables d’environnement nécessaires au déploiement
-- [x] Documenter la procédure de déploiement et le diagnostic des erreurs Docker
-- [x] Créer un checkpoint après validation du correctif de déploiement
-
-- [x] Ajouter un mode de prévisualisation front-only sans clés Manus
-- [x] Afficher le dashboard Holding IVIR sur la route `/` au lieu de la page template
-- [x] Ajouter des données de prévisualisation clairement identifiées sans les mélanger aux données de production
-- [x] Corriger le runtime Docker qui ne trouve pas le package `vite` après `pnpm install --prod`
-- [x] Ajouter des tests pour le mode front-only et la route d’accueil (preview helpers et contrat de route)
-- [x] Vérifier la prévisualisation desktop et mobile sans secrets
-- [x] Créer un checkpoint après validation du front-only et du runtime
-
-- [x] Remplacer le backend Node/tRPC par une API FastAPI Python complète
-- [x] Implémenter les modules Python Alpha (scraping) et Beta (extraction Mistral/Pydantic)
-- [x] Implémenter le module Gamma (base SQLAlchemy / SQLite ou MySQL) et Delta (routes FastAPI)
-- [x] Reconnecter le frontend React aux endpoints FastAPI et conserver le mode front-only
-- [x] Implémenter les exports CSV/PDF natifs en Python
-- [x] Mettre à jour Dockerfile, docker-compose.yml et les guides pour une stack 100% Python
-- [x] Vérifier les tests Python, le build frontend et livrer le checkpoint Python
-
-- [x] Ajouter un champ URL source dans AdminPanel
-- [x] Ajouter le choix de source et la validation URL côté FastAPI
-- [x] Déclencher le scraping réel sur l’URL fournie après clic
-- [x] Exécuter l’extraction IA sur les documents collectés après le scraping
-- [x] Afficher le statut, le nombre ajouté et les erreurs dans AdminPanel
-- [x] Ajouter les tests API et interface du lancement par URL
-- [x] Mettre à jour la documentation et créer un checkpoint de cette fonctionnalité
-
-- [x] Ajouter un tableau de prévisualisation détaillée des entités juridiques extraites
-- [x] Afficher les parties, références légales, montants, juridiction, verdict, confiance et résumé
-- [x] Conserver les filtres, le tri et la pagination sur la prévisualisation
-- [x] Ajouter un état vide et un état de chargement cohérents avec les exports
-- [x] Ajouter les tests UI de prévisualisation et de cohérence avec les données exportées
-- [x] Vérifier la prévisualisation sur desktop/mobile et créer un checkpoint
-
-- [x] Analyser le cahier des charges fourni (`pasted_content_2.txt`) et établir la matrice de conformité
-- [x] Vérifier la correspondance exacte entre les modules Alpha, Bêta, Gamma, Delta, Interface et les spécifications
-- [x] Rédiger le rapport d’audit de conformité (`AUDIT_CAHIER_DES_CHARGES.md`)
-
-## Transition vers une application réelle et opérationnelle
-- [x] Auditer l’écart entre la démo actuelle et le besoin réel (API Légifrance OAuth2 + interface métier réelle)
-- [x] Implémenter le module d’authentification OAuth2 PISTE / Légifrance avec gestion et renouvellement des tokens Bearer
-- [ ] Connecter le scraper aux endpoints de recherche de l’API Légifrance et valider l’accès métier PISTE (code prêt, droits API sandbox encore requis)
-- [x] Enrichir l’interface React avec navigation métier, recherche Légifrance, connexion admin et résultats persistants
-- [x] Ajouter les tests d’intégration du contrat JURI, de l’authentification et documenter la configuration des clés d’accès Légifrance et Mistral
-
-## Correction du flux d’authentification administrateur et de la clé Mistral
-- [x] Auditer la distinction entre le jeton administrateur `ADMIN_API_TOKEN` et la clé Mistral `MISTRAL_API_KEY`
-- [ ] Permettre la configuration automatique ou le mode open-admin par défaut si aucun token n’est requis pour faciliter la prise en main locale
-- [ ] Ajouter une saisie directe de secrets dans AdminPanel (à éviter côté navigateur ; utiliser la carte Secrets/Management UI)
-- [x] Afficher dans AdminPanel l’état non sensible de Mistral, Légifrance et de la protection Bearer
-- [x] Valider le parcours backend sans erreur 401 avec des tests mis à jour ; l’interface demande maintenant explicitement `ADMIN_API_TOKEN`
-- [x] Ajouter un bouton de déconnexion visible et vérifier le nettoyage de `ADMIN_API_TOKEN` côté navigateur
-- [x] Corriger l’intégration Mistral pour utiliser l’endpoint HTTP officiel, valider le JSON structuré et appliquer un fallback sûr
-
-## Résolution de l’avertissement du pipeline URL
-- [x] Analyser la source de l’avertissement « Le traitement s’est terminé avec un avertissement » dans FastAPI et le client React
-- [x] Rendre les messages d’erreur du pipeline explicites en propageant `result.message`
-- [x] Valider le déclenchement réel avec un test d’intégration et un rapport clair
-
-## Relance manuelle sur erreur
-- [x] Ajouter un bouton « Relancer l’extraction » conditionnel dans AdminPanel lorsqu’un avertissement ou une erreur survient
-- [x] Relier ce bouton à l’endpoint d’extraction existant de FastAPI
-- [x] Valider le test unitaire et le build frontend
+## Jalons récents (Août 2026)
+- [x] Résolution de l’erreur 500 sur le blocage robots.txt (gestion propre de `PermissionError`)
+- [x] Implémentation du support Wikipédia conforme à robots.txt avec User-Agent Wikimedia explicite
+- [x] Ajout du bouton de relance manuelle de l’extraction sur erreur
+- [x] Rédaction du guide de scraping Wikipédia (`WIKIPEDIA_SCRAPING_GUIDE.md`)

@@ -11,9 +11,7 @@ import {
   getLegalEntitiesByVerdict,
   getLegalEntitiesByJuridiction,
   getStatistics,
-  getLegalExportRows,
 } from "../db";
-import { toLegalExportRow } from "../legalExports";
 import { InsertLegalDocument, InsertLegalEntity } from "../../drizzle/schema";
 
 /**
@@ -65,27 +63,13 @@ export const listDocumentsProcedure = publicProcedure
     z.object({
       limit: z.number().min(1).max(100).default(50),
       offset: z.number().min(0).default(0),
-      search: z.string().trim().max(200).optional(),
-      source: z.string().trim().max(100).optional(),
-      verdict: z.enum(["favorable", "rejected", "partial"]).optional(),
-      startDate: z.string().datetime().optional(),
-      endDate: z.string().datetime().optional(),
     })
   )
   .query(async ({ input }) => {
-    const rows = await getLegalExportRows({
-      search: input.search,
-      source: input.source,
-      verdict: input.verdict,
-      startDate: input.startDate ? new Date(input.startDate) : undefined,
-      endDate: input.endDate ? new Date(input.endDate) : undefined,
-    });
-    const documents = rows
-      .slice(input.offset, input.offset + input.limit)
-      .map(({ document, entity }) => ({ ...document, extractedEntity: entity ? toLegalExportRow(document, entity) : null }));
+    const documents = await getAllLegalDocuments(input.limit, input.offset);
     return {
       documents,
-      count: rows.length,
+      count: documents.length,
     };
   });
 

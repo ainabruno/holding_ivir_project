@@ -3,22 +3,19 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import Dashboard from "@/pages/Dashboard";
 import AdminPanel from "@/pages/AdminPanel";
-import LegifranceSearch from "@/pages/LegifranceSearch";
-import LegalWorkspaceLayout from "./components/LegalWorkspaceLayout";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import { APP_ROUTES } from "./appRoutes";
+import Home from "./pages/Home";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
-      <Route path={APP_ROUTES.home} component={Dashboard} />
-      <Route path={APP_ROUTES.dashboard} component={Dashboard} />
-      <Route path={APP_ROUTES.admin} component={AdminPanel} />
-      <Route path="/legifrance" component={LegifranceSearch} />
-      <Route path={APP_ROUTES.notFound} component={NotFound} />
+      <Route path={"/"} component={Home} />
+      <Route path={"/dashboard"} component={Dashboard} />
+      <Route path={"/admin"} component={AdminPanel} />
+      <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
     </Switch>
@@ -39,7 +36,7 @@ function App() {
       >
         <TooltipProvider>
           <Toaster />
-          <LegalWorkspaceLayout><Router /></LegalWorkspaceLayout>
+          <Router />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

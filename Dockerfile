@@ -1,26 +1,46 @@
-FROM node:22-alpine AS frontend-builder
+# Multi-stage build for Holding IVIR Legal Intelligence Platform
+# Stage 1: Build stage
+FROM node:22-alpine AS builder
+
 WORKDIR /app
+
+# Copy package files
 COPY package.json pnpm-lock.yaml ./
-COPY patches ./patches
-RUN corepack enable && corepack prepare pnpm@10.4.1 --activate
-RUN pnpm install --frozen-lockfile
+
+# Install dependencies
+RUN npm install -g pnpm && pnpm install --frozen-lockfile
+
+# Copy source code
 COPY . .
+
+# Build the application
 RUN pnpm build
 
-FROM python:3.12-slim
+# Stage 2: Runtime stage
+FROM node:22-alpine
+
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+# Install runtime dependencies only
+COPY package.json pnpm-lock.yaml ./
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN npm install -g pnpm && pnpm install --prod --frozen-lockfile
 
-COPY backend ./backend
-COPY --from=frontend-builder /app/dist/public ./dist/public
+# Copy built application from builder
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/drizzle ./drizzle
 
-ENV PORT=3000
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+
+USER nodejs
+
+# Expose port
 EXPOSE 3000
 
-CMD ["sh", "-c", "uvicorn backend.main:app --host 0.0.0.0 --port ${PORT}"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
+
+# Start the application
+CMD ["node", "dist/index.js"]

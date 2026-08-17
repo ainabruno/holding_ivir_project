@@ -7,8 +7,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
-import { serveStatic } from "./static";
-import { registerLegalExportRoutes } from "../legalExportRoutes";
+import { serveStatic, setupVite } from "./vite";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -37,7 +36,6 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   registerStorageProxy(app);
   registerOAuthRoutes(app);
-  registerLegalExportRoutes(app);
   // tRPC API
   app.use(
     "/api/trpc",
@@ -48,9 +46,6 @@ async function startServer() {
   );
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
-    // Keep the development-only Vite module out of the production bundle.
-    const loadModule = new Function("specifier", "return import(specifier)") as (specifier: string) => Promise<typeof import("./vite")>;
-    const { setupVite } = await loadModule("./vite");
     await setupVite(app, server);
   } else {
     serveStatic(app);
