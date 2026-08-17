@@ -48,11 +48,11 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 ## Module Interface - React Dashboard
 - [x] Create dashboard layout with navigation
 - [x] Build documents table with sorting and pagination
-- [x] Add search functionality for documents
-- [x] Create filter panel (date, source, verdict)
-- [x] Build entity detail view per document
-- [x] Create admin control panel for triggering jobs
-- [x] Add job status/progress indicators
+- [ ] Add search functionality for documents
+- [ ] Create filter panel (date, source, verdict)
+- [ ] Build entity detail view per document
+- [ ] Create admin control panel for triggering jobs
+- [ ] Add job status/progress indicators
 - [x] Implement statistics dashboard with charts
 - [ ] Add verdict distribution chart (pie/bar)
 - [ ] Add documents over time chart (line)
@@ -64,7 +64,8 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 - [x] Verify Manus OAuth integration is working
 - [x] Create admin-only routes for scraping/extraction triggers
 - [x] Implement role-based access control (admin vs public)
-- [x] Add login/logout UI avec bouton visible et nettoyage de session- [x] Protect admin dashboard behind authentication
+- [ ] Add login/logout UI
+- [x] Protect admin dashboard behind authentication
 - [x] Allow public read-only access to documents
 
 ## Deployment & Configuration
