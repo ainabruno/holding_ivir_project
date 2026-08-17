@@ -182,3 +182,7 @@ Full-stack legal intelligence platform with automated scraping, AI extraction, d
 - [x] Ajouter un état vide et un état de chargement cohérents avec les exports
 - [x] Ajouter les tests UI de prévisualisation et de cohérence avec les données exportées
 - [x] Vérifier la prévisualisation sur desktop/mobile et créer un checkpoint
+
+- [x] Analyser le cahier des charges fourni (`pasted_content_2.txt`) et établir la matrice de conformité
+- [x] Vérifier la correspondance exacte entre les modules Alpha, Bêta, Gamma, Delta, Interface et les spécifications
+- [x] Rédiger le rapport d’audit de conformité (`AUDIT_CAHIER_DES_CHARGES.md`)
